@@ -6,7 +6,6 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     STAGE: ${self:provider.stage}
-    PREFIX_TABLE: ${self:service}-${opt:stage, self:provider.stage}
   logs:
     restApi: true
     httpApi: true
