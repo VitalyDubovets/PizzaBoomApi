@@ -91,3 +91,13 @@ resources:
             DeveloperOnlyAttribute: false
             Mutable: true
             Required: true
+          - Name: username
+            Required: false
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            AttributeDataType: String
+          - Name: dynamo_user_id
+            Required: false
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            AttributeDataType: String
