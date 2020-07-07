@@ -1,9 +1,9 @@
-service: pizzaboomapi
+service: pizza-boom
 
 provider:
   name: aws
   runtime: python3.8
-  stage: ${opt:stage}
+  stage: ${opt:stage, 'dev'}
   environment:
     STAGE: ${self:provider.stage}
     PREFIX_TABLE: ${self:service}-${opt:stage, self:provider.stage}
@@ -20,7 +20,7 @@ provider:
             - - 'https://cognito-idp.'
               - '${opt:region, self:provider.region}'
               - '.amazonaws.com/'
-              - Ref: cognitoPizzaBoomUserPool
+              - Ref: PizzaBoomUserPool
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -31,7 +31,7 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
         - dynamodb:DescribeTable
-      Resource: arn:aws:dynamodb:*:*:table/${self:provider.environment.PREFIX_TABLE}-users
+      Resource: arn:aws:dynamodb:*:*:table/${self:custom.config.PREFIX_TABLE}-${self:provider.stage}-users
 
 package:
   individually: false
@@ -43,9 +43,9 @@ package:
     - .serverless/**
 
 custom:
+  config: ${file(settings_default.yml)}
   pythonRequirements:
     dockerizePip: true
-  env:
 
 plugins:
   - serverless-python-requirements
@@ -56,10 +56,10 @@ functions:
 
 resources:
   Resources:
-    dynamoPizzaBoomUsersTable:
+    DynamoPizzaBoomUsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.PREFIX_TABLE}-users
+        TableName: ${self:custom.config.PREFIX_TABLE}-${self:provider.stage}-users
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -69,7 +69,9 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    cognitoPizzaBoomUserPool:
+    HttpApi:
+      DependsOn: PizzaBoomUserPool
+    PizzaBoomUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
         AliasAttributes:
@@ -101,3 +103,9 @@ resources:
             DeveloperOnlyAttribute: false
             Mutable: true
             AttributeDataType: String
+    UserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId:
+          Ref: PizzaBoomUserPool
+        Domain: "${self:provider.stage}-users-${self:service}"
