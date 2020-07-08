@@ -30,7 +30,7 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
         - dynamodb:DescribeTable
-      Resource: arn:aws:dynamodb:*:*:table/${self:custom.config.PREFIX_TABLE}-${self:provider.stage}-users
+      Resource: arn:aws:dynamodb:*:*:table/${self:service}-${self:provider.stage}-users
 
 package:
   individually: false
@@ -58,7 +58,7 @@ resources:
     DynamoPizzaBoomUsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.config.PREFIX_TABLE}-${self:provider.stage}-users
+        TableName: ${self:service}-${self:provider.stage}-users
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
