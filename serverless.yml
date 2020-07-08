@@ -50,8 +50,12 @@ plugins:
   - serverless-python-requirements
 
 functions:
-  hello:
-    handler: pizza_boom/handler.hello
+  cognitoTriggerPreSignUp:
+    handler: pizza_boom/auth/lambda_triggers/trigger_pre_sign_up.handler
+    events:
+      - cognitoUserPool:
+          pool: PizzaBoomUserPool
+          trigger: PreSignUp
 
 resources:
   Resources:

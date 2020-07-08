@@ -24,10 +24,10 @@ class LambdaBase(ABC):
             clear_contextvars()
             bind_contextvars(request_id=str(uuid.uuid4()))
 
-            return cls().handle(event=event, context=context)
+            return cls().handler(event=event, context=context)
 
         return handler
 
     @abstractmethod
-    def handle(self, event, context):
+    def handler(self, event, context):
         ...
