@@ -1,6 +1,7 @@
-import logging
+import logging.config
 import sys
 
+import rapidjson
 import structlog
 from structlog.contextvars import merge_contextvars
 
@@ -12,7 +13,7 @@ def configure_logging(log_format: str = 'json'):
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=logging.INFO)
 
     if log_format == 'json':
-        renderer = structlog.processors.JSONRenderer()
+        renderer = structlog.processors.JSONRenderer(serializer=rapidjson.dumps)
     else:
         renderer = structlog.dev.ConsoleRenderer()
 
@@ -30,6 +31,7 @@ def configure_logging(log_format: str = 'json'):
             renderer,
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
+        context_class=dict,
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )

@@ -4,6 +4,7 @@ docutils==0.15.2
 jmespath==0.10.0
 pynamodb==4.3.2
 python-dateutil==2.8.1
+python-rapidjson==0.9.1
 s3transfer==0.3.3
 six==1.15.0
 structlog==20.1.0
