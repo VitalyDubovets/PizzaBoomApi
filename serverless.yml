@@ -19,7 +19,7 @@ provider:
             - - 'https://cognito-idp.'
               - '${opt:region, self:provider.region}'
               - '.amazonaws.com/'
-              - Ref: PizzaBoomUserPool
+              - Ref: pizzaBoomUserPool
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -54,12 +54,12 @@ functions:
     handler: pizza_boom/auth/lambda_triggers/trigger_pre_sign_up.handler
     events:
       - cognitoUserPool:
-          pool: PizzaBoomUserPool
+          pool: PizzaBoomUsers
           trigger: PreSignUp
 
 resources:
   Resources:
-    DynamoPizzaBoomUsersTable:
+    dynamoPizzaBoomUsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:service}-${self:provider.stage}-users
@@ -72,9 +72,8 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    HttpApi:
-      DependsOn: PizzaBoomUserPool
-    PizzaBoomUserPool:
+
+    CognitoUserPoolPizzaBoomUsers:
       Type: AWS::Cognito::UserPool
       Properties:
         AliasAttributes:
@@ -95,7 +94,7 @@ resources:
             AttributeDataType: String
             DeveloperOnlyAttribute: false
             Mutable: true
-            Required: true
+            Required: false
           - Name: username
             Required: false
             DeveloperOnlyAttribute: false
@@ -106,9 +105,36 @@ resources:
             DeveloperOnlyAttribute: false
             Mutable: true
             AttributeDataType: String
-    UserPoolDomain:
+        UserPoolName: ${self:service}-${self:provider.stage}-users-pool
+
+    pizzaBoomUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - email
+          - phone
+          - openid
+          - profile
+          - aws.cognito.signin.user.admin
+        CallbackURLs:
+          - https://google.com
+        ClientName: ${self:service}-users-app
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        RefreshTokenValidity: 15
+        SupportedIdentityProviders:
+          - COGNITO
+        UserPoolId:
+          Ref: CognitoUserPoolPizzaBoomUsers
+
+    pizzaBoomUserPoolDomain:
       Type: AWS::Cognito::UserPoolDomain
       Properties:
         UserPoolId:
-          Ref: PizzaBoomUserPool
+          Ref: CognitoUserPoolPizzaBoomUsers
         Domain: "${self:provider.stage}-users-${self:service}"

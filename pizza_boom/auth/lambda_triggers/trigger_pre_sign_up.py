@@ -10,7 +10,7 @@ class PreSignUpLambdaTrigger(LambdaBase):
     def handler(self, event, context):
         logger.debug(
             "pre_sign_up_trigger",
-            data=event
+            trigger_event=event,
         )
         event['response']['autoConfirmUser'] = True
         if event['response']['userAttributes'].get('email'):

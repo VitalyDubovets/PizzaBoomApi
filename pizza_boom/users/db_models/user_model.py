@@ -14,3 +14,4 @@ class UserModel(BaseModel):
     first_name = UnicodeAttribute()
     last_name = UnicodeAttribute()
     last_sign_in = UTCDateTimeAttribute()
+    phone = UnicodeAttribute()

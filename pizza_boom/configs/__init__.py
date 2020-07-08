@@ -10,7 +10,7 @@ def configure_logging(log_format: str = 'json'):
     root_logger = logging.getLogger()
     root_logger.handlers = []
 
-    logging.basicConfig(format="%(message)s", stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(format="%(message)s", stream=sys.stdout, level=logging.DEBUG)
 
     if log_format == 'json':
         renderer = structlog.processors.JSONRenderer(serializer=rapidjson.dumps)
