@@ -57,6 +57,13 @@ functions:
           pool: PizzaBoomUsers
           trigger: PreSignUp
 
+  cognitoTriggerCustomMessage:
+    handler: pizza_boom/auth/lambda_triggers/trigger_custom_message.handler
+    events:
+      - cognitoUserPool:
+          pool: PizzaBoomUsers
+          trigger: CustomMessage
+
 resources:
   Resources:
     dynamoPizzaBoomUsersTable:
@@ -78,8 +85,8 @@ resources:
       Properties:
         AliasAttributes:
           - email
-        AutoVerifiedAttributes:
-          - email
+        EmailConfiguration:
+          EmailSendingAccount: COGNITO_DEFAULT
         MfaConfiguration: OFF
         Policies:
           PasswordPolicy:
@@ -91,10 +98,10 @@ resources:
             TemporaryPasswordValidityDays: 14
         Schema:
           - Name: email
-            Required: true
+            AttributeDataType: String
             DeveloperOnlyAttribute: false
             Mutable: true
-            AttributeDataType: String
+            Required: true
           - Name: username
             Required: false
             DeveloperOnlyAttribute: false

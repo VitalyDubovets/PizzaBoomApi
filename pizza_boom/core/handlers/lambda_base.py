@@ -6,6 +6,10 @@ from structlog.contextvars import bind_contextvars, clear_contextvars
 
 from pizza_boom.configs import configure_logging
 
+__all__ = [
+    'LambdaBase',
+]
+
 
 class LambdaBase(ABC):
     def __init__(self):

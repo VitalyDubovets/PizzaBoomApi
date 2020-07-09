@@ -1,10 +1,10 @@
+from typing import Any
+
 import boto3
 import structlog
 from botocore.exceptions import ClientError
-from typing import Any
 
-from pizza_boom.core.handlers.lambda_base import LambdaBase
-from pizza_boom.users.db_models.user_models import UserModel
+from pizza_boom.core.handlers import LambdaBase
 
 logger = structlog.get_logger()
 
