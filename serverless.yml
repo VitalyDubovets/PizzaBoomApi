@@ -19,7 +19,7 @@ provider:
             - - 'https://cognito-idp.'
               - '${opt:region, self:provider.region}'
               - '.amazonaws.com/'
-              - Ref: pizzaBoomUserPool
+              - Ref: CognitoUserPoolPizzaBoomUsers
   iamRoleStatements:
     - Effect: Allow
       Action:
