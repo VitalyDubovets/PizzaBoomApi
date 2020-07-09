@@ -11,6 +11,7 @@ class UserModel(BaseModel):
 
     id = UnicodeAttribute(hash_key=True, default=lambda: str(uuid.uuid4()))
     email = UnicodeAttribute()
+    username = UnicodeAttribute()
     first_name = UnicodeAttribute()
     last_name = UnicodeAttribute()
     last_sign_in = UTCDateTimeAttribute()
