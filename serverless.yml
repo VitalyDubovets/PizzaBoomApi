@@ -91,10 +91,10 @@ resources:
             TemporaryPasswordValidityDays: 14
         Schema:
           - Name: email
-            AttributeDataType: String
+            Required: true
             DeveloperOnlyAttribute: false
             Mutable: true
-            Required: false
+            AttributeDataType: String
           - Name: username
             Required: false
             DeveloperOnlyAttribute: false

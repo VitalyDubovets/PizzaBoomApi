@@ -2,7 +2,7 @@ import uuid
 
 from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute
 
-from core.models.base_model import BaseModel
+from pizza_boom.core.models.base_model import BaseModel
 
 
 class UserModel(BaseModel):

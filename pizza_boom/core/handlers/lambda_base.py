@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import structlog
 from structlog.contextvars import bind_contextvars, clear_contextvars
 
-from configs import configure_logging
+from pizza_boom.configs import configure_logging
 
 
 class LambdaBase(ABC):
