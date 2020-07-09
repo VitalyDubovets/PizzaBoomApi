@@ -16,8 +16,13 @@ class CustomMessageLambdaTrigger(LambdaBase):
             "custom_message_trigger",
             trigger_event=event
         )
-        if event['triggerSource'] == "PreSignUp_SignUp":
+        if event['triggerSource'] == "CustomMessage_SignUp":
+            event['request']['usernameParameter'] = event['userName']
             event: dict = _form_email_message(event)
+        logger.debug(
+            "message_before_form",
+            trigger_event=event
+        )
         return event
 
 

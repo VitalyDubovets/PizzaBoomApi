@@ -85,8 +85,8 @@ resources:
       Properties:
         AliasAttributes:
           - email
-        EmailConfiguration:
-          EmailSendingAccount: COGNITO_DEFAULT
+        AutoVerifiedAttributes:
+          - email
         MfaConfiguration: OFF
         Policies:
           PasswordPolicy:

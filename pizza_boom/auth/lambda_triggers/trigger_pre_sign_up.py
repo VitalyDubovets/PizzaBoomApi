@@ -13,9 +13,7 @@ class PreSignUpLambdaTrigger(LambdaBase):
     def handler(self, event: dict, context: Any) -> dict:
         logger.debug(
             "pre_sign_up_trigger",
-            user_data=event['request']['userAttributes'],
-            user_pool_id=event['userPoolId'],
-            username=event['userName'],
+            trigger_event=event,
         )
         if event['triggerSource'] == "PreSignUp_SignUp":
             email = event['request']['userAttributes'].get('email')
@@ -26,7 +24,6 @@ class PreSignUpLambdaTrigger(LambdaBase):
                     user_pool=event['userPoolId']
             ):
                 raise Exception('User is already exist')
-            event['response']['autoConfirmUser'] = True
         return event
 
 
