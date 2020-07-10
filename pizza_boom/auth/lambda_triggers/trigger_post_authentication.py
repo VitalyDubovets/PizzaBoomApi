@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Any
 
-import boto3
 import structlog
 
 from pizza_boom.core.handlers import LambdaBase
