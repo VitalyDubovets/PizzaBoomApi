@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 
 from pizza_boom.core.handlers import LambdaBase
 
+
 logger = structlog.get_logger()
 
 
