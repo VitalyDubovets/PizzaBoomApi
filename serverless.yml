@@ -48,6 +48,14 @@ functions:
           pool: PizzaBoomUsers
           trigger: CustomMessage
 
+  cognitoTriggerPostAuthentication:
+    name: ${self:service}-${opt:stage, self:provider.stage}-post-authentication-trigger
+    handler: pizza_boom/auth/lambda_triggers/trigger_post_authentication.handler
+    events:
+      - cognitoUserPool:
+          pool: PizzaBoomUsers
+          trigger: PostAuthentication
+
   cognitoTriggerPostConfirmation:
     name: ${self:service}-${opt:stage, self:provider.stage}-post-confirmation-trigger
     handler: pizza_boom/auth/lambda_triggers/trigger_post_confirmation.handler
