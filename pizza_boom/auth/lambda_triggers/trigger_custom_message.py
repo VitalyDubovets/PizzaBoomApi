@@ -1,5 +1,3 @@
-import random
-import string
 from typing import Any
 
 import structlog
@@ -19,10 +17,6 @@ class CustomMessageLambdaTrigger(LambdaBase):
         if event['triggerSource'] == "CustomMessage_SignUp":
             event['request']['usernameParameter'] = event['userName']
             event: dict = _form_email_message(event)
-        logger.debug(
-            "message_before_form",
-            trigger_event=event
-        )
         return event
 
 
