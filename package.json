@@ -11,6 +11,7 @@
   "dependencies": {
     "serverless": "1.74.1",
     "serverless-plugin-warmup": "^4.9.0",
-    "serverless-python-requirements": "5.1.0"
+    "serverless-python-requirements": "5.1.0",
+    "serverless-wsgi": "1.7.5"
   }
 }

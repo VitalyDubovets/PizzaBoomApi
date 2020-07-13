@@ -18,6 +18,10 @@ venv/
 *.egg-info/
 .installed.cfg
 *.egg
+.env
+*.pyc
+**/__pycache__/
+__pycache__/
 
 # Serverless directories
 .serverless
