@@ -11,6 +11,27 @@ provider:
     restApi: true
     httpApi: true
   httpApi:
+    cors:
+      allowedOrigins: "*"
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - x-amz-date
+        - x-api-key
+        - x-amz-security-token
+        - x-amz-user-agent
+      allowedMethods:
+        - OPTIONS
+        - GET
+        - POST
+        - PATCH
+        - PUT
+        - DELETE
+        - HEAD
+      allowCredentials: false
+      #      exposedResponseHeaders:
+      maxAge: 0 # In seconds
+
     authorizers:
       userJwtAuthorizer:
         identitySource: $request.header.Authorization
@@ -18,7 +39,7 @@ provider:
           Fn::Join:
             - ''
             - - 'https://cognito-idp.'
-              - '${opt:region, self:provider.region}'
+              - '${self:provider.region}'
               - '.amazonaws.com/'
               - Ref: CognitoUserPoolPizzaBoomUsers
         audience:
@@ -55,6 +76,8 @@ functions:
       - httpApi:
           method: 'PATCH'
           path: /api/v1/users/{proxy+}
+          authorizer:
+            name: userJwtAuthorizer
 
   cognitoTriggerCustomMessage:
     name: ${self:service}-${opt:stage, self:provider.stage}-custom-message-trigger
