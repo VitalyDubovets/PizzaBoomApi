@@ -44,7 +44,7 @@ provider:
               - Ref: CognitoUserPoolPizzaBoomUsers
         audience:
           - Ref:
-              CognitoUserPoolPizzaBoomUsers
+              pizzaBoomUserPoolClient
 
 package:
   individually: false
@@ -66,6 +66,7 @@ custom:
 plugins:
   - serverless-plugin-warmup
   - serverless-python-requirements
+  - serverless-step-functions
   - serverless-wsgi
 
 functions:
@@ -194,6 +195,42 @@ resources:
           Ref: CognitoUserPoolPizzaBoomUsers
         Domain: "${self:provider.stage}-users-${self:service}"
 
+    StepFunctionsExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        RoleName: ${self:service}-${self:provider.stage}-cook-pizza-spf-exec-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - states.${self:provider.region}.amazonaws.com
+                  - "lambda.amazonaws.com"
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: execution-access
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource:
+                    - Fn::Join:
+                        - ':'
+                        - - arn:aws:lambda
+                          - Ref: AWS::Region
+                          - Ref: AWS::AccountId
+                          - function:${self:service}-${opt:stage, self:provider.stage}-*
+                - Effect: Allow
+                  Action:
+                    - states:StartExecution
+                    - states:DescribeExecution
+                    - states:StopExecution
+                  Resource: "*"
+
     ExecutionRole:
       Type: AWS::IAM::Role
       Properties:
@@ -249,9 +286,9 @@ resources:
                   Action:
                     - cognito-idp:*
                   Resource: '*'
-                - Effect: 'Allow'
+                - Effect: Allow
                   Action:
-                    - 'lambda:InvokeFunction'
+                    - lambda:InvokeFunction
                   Resource:
                     - Fn::Join:
                         - ':'
