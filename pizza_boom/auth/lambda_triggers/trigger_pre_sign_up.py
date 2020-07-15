@@ -4,7 +4,7 @@ import boto3
 import structlog
 from botocore.exceptions import ClientError
 
-from pizza_boom.core.handlers import LambdaBase
+from pizza_boom.core.handlers import LambdaBase, lambda_injector
 
 
 logger = structlog.get_logger()
@@ -38,4 +38,4 @@ def _is_email_already_exist(
         return False
 
 
-handler = PreSignUpLambdaTrigger.get_handler()
+handler = lambda_injector.get(PreSignUpLambdaTrigger).get_handler()

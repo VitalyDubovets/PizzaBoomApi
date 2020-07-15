@@ -1,9 +1,42 @@
 import logging.config
+import os
 import sys
+from typing import Any
 
+import jmespath
 import rapidjson
 import structlog
+import yaml
+from injector import Module, provider, singleton
 from structlog.contextvars import merge_contextvars
+
+from pizza_boom.core.utils import merge
+
+
+class Settings:
+    def __init__(self):
+        self._values: dict = {}
+        config_files: list = ["settings_default.yml", "settings_environment.yml"]
+
+        for config_file in config_files:
+            if os.path.exists(config_file):
+                with open(config_file) as file:
+                    merge(yaml.load(file, Loader=yaml.FullLoader), self._values)
+
+        merge(dict(os.environ), self._values)
+
+    def get_value(self, path: str, required: bool = True) -> Any:
+        target_setting = jmespath.search(path, self._values)
+        if required and target_setting is None:
+            raise ValueError(f"Required setting {path} was not specified")
+        return target_setting
+
+
+class SettingsModule(Module):
+    @singleton
+    @provider
+    def provide_settings(self) -> Settings:
+        return Settings()
 
 
 def configure_logging(log_format: str = 'json'):

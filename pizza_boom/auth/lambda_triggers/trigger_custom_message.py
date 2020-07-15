@@ -2,7 +2,7 @@ from typing import Any
 
 import structlog
 
-from pizza_boom.core.handlers import LambdaBase
+from pizza_boom.core.handlers import LambdaBase, lambda_injector
 
 
 logger = structlog.get_logger()
@@ -29,4 +29,4 @@ def _form_email_message(event: dict) -> dict:
     return event
 
 
-handler = CustomMessageLambdaTrigger.get_handler()
+handler = lambda_injector.get(CustomMessageLambdaTrigger).get_handler()

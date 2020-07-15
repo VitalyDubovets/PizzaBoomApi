@@ -112,6 +112,54 @@ functions:
           pool: PizzaBoomUsers
           trigger: PreSignUp
 
+stepFunctions:
+  stateMachines:
+    cooking:
+      id: CookingStateMachine
+      name: cookingStateMachine-${self:service}-${opt:stage, self:provider.stage}
+      definition:
+        Comment: "Cooking State Machine"
+        StartAt: PreparationIngredients
+        States:
+          PreparationIngredients:
+            Type: Parallel
+            ResultPath: "$.results"
+            Branches:
+              - StartAt: PreparingDough
+                States:
+                  PreparingDough:
+                    Type: Wait
+                    Seconds: 50
+                    End: True
+              - StartAt: PreparingFilling
+                States:
+                  PreparingFilling:
+                    Type: Task
+                    Resource: "arn:aws:states:::states:startExecution.sync:2"
+                    Parameters:
+                      StateMachineArn:
+                        Ref: PreparingFillingStateMachine
+                    End: True
+            End: True
+
+    preparingFillings:
+      id: PreparingFillingStateMachine
+      name: preparingFillingsStateMachine-${self:service}-${opt:stage, self:provider.stage}
+      definition:
+        Comment: "Start to prepare filling"
+        StartAt: WashingFood
+        States:
+          WashingFood:
+            Type: Wait
+            Seconds: 20
+            Next: SlicingFood
+          SlicingFood:
+            Type: Wait
+            Seconds: 30
+            Next: SuccessPrepareFood
+          SuccessPrepareFood:
+            Type: Succeed
+
 
 resources:
   Resources:

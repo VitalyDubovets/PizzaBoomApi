@@ -4,7 +4,7 @@ from typing import Any
 import boto3
 import structlog
 
-from pizza_boom.core.handlers import LambdaBase
+from pizza_boom.core.handlers import LambdaBase, lambda_injector
 from pizza_boom.users.db_models.user_models import UserModel
 from pizza_boom.users.schemas import UserSchemaCreate
 
@@ -53,4 +53,4 @@ def _create_user(event: dict) -> UserModel:
     return user
 
 
-handler = PostConfirmationLambdaTrigger.get_handler()
+handler = lambda_injector.get(PostConfirmationLambdaTrigger).get_handler()

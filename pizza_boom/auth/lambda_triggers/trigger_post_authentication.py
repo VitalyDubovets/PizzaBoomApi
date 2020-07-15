@@ -3,7 +3,7 @@ from typing import Any
 
 import structlog
 
-from pizza_boom.core.handlers import LambdaBase
+from pizza_boom.core.handlers import LambdaBase, lambda_injector
 from pizza_boom.users.db_models.user_models import UserModel
 
 
@@ -26,4 +26,4 @@ class PostAuthenticationLambdaTrigger(LambdaBase):
         return event
 
 
-handler = PostAuthenticationLambdaTrigger.get_handler()
+handler = lambda_injector.get(PostAuthenticationLambdaTrigger).get_handler()

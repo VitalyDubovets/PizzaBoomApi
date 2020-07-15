@@ -1,1 +1,2 @@
-from .lambda_base import LambdaBase
+from .lambda_base import LambdaBase, lambda_injector
+
