@@ -112,11 +112,20 @@ functions:
           pool: PizzaBoomUsers
           trigger: PreSignUp
 
+  evaluateQuality:
+    name: ${self:service}-${opt:stage, self:provider.stage}-evaluate-quality-pizza
+    handler: pizza_boom/pizza_orders/lambda_functions/evaluate_quality.handler
+
 stepFunctions:
   stateMachines:
     cooking:
       id: CookingStateMachine
       name: cookingStateMachine-${self:service}-${opt:stage, self:provider.stage}
+      role:
+        Fn::GetAtt: [StepFunctionsExecutionRole, Arn]
+      dependsOn:
+        - StepFunctionsExecutionRole
+        - ExecutionRole
       definition:
         Comment: "Cooking State Machine"
         StartAt: PreparationIngredients
@@ -140,11 +149,37 @@ stepFunctions:
                       StateMachineArn:
                         Ref: PreparingFillingStateMachine
                     End: True
-            End: True
+            Next: BakingPizza
+          BakingPizza:
+            Type: Wait
+            Seconds: 30
+            Next: EvaluationQuality
+          EvaluationQuality:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [evaluateQuality, Arn]
+            Next: CheckingTheQuality
+          CheckingTheQuality:
+            Type: Choice
+            Choices:
+              - Variable: "$.goodQuality"
+                BooleanEquals: False
+                Next: PreparationIngredients
+              - Variable: "$.goodQuality"
+                BooleanEquals: False
+                Next: SucceedCooking
+          SucceedCooking:
+            Type: Succeed
+
 
     preparingFillings:
       id: PreparingFillingStateMachine
       name: preparingFillingsStateMachine-${self:service}-${opt:stage, self:provider.stage}
+      role:
+        Fn::GetAtt: [StepFunctionsExecutionRole, Arn]
+      dependsOn:
+        - StepFunctionsExecutionRole
+        - ExecutionRole
       definition:
         Comment: "Start to prepare filling"
         StartAt: WashingFood
@@ -159,7 +194,6 @@ stepFunctions:
             Next: SuccessPrepareFood
           SuccessPrepareFood:
             Type: Succeed
-
 
 resources:
   Resources:
