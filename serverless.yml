@@ -65,6 +65,7 @@ custom:
 
 plugins:
   - serverless-plugin-warmup
+  - serverless-pseudo-parameters
   - serverless-python-requirements
   - serverless-step-functions
   - serverless-wsgi
@@ -163,11 +164,11 @@ stepFunctions:
             Type: Choice
             Choices:
               - Variable: "$.goodQuality"
-                BooleanEquals: False
-                Next: PreparationIngredients
+                BooleanEquals: True
+                Next: SucceedCooking
               - Variable: "$.goodQuality"
                 BooleanEquals: False
-                Next: SucceedCooking
+                Next: PreparationIngredients
           SucceedCooking:
             Type: Succeed
 
@@ -288,11 +289,11 @@ resources:
             - Effect: Allow
               Principal:
                 Service:
-                  - states.${self:provider.region}.amazonaws.com
+                  - states.#{AWS::Region}.amazonaws.com
                   - "lambda.amazonaws.com"
               Action: sts:AssumeRole
         Policies:
-          - PolicyName: execution-access
+          - PolicyName: access-execution
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -308,10 +309,21 @@ resources:
                           - function:${self:service}-${opt:stage, self:provider.stage}-*
                 - Effect: Allow
                   Action:
+                    - events:PutTargets
+                    - events:PutRule
+                    - events:DescribeRule
+                  Resource: arn:#{AWS::Partition}:events:#{AWS::Region}:#{AWS::AccountId}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule
+                - Effect: Allow
+                  Action:
                     - states:StartExecution
+                    - states:SendTaskSuccess
+                    - states:SendTaskFailure
+                    - states:GetActivityTask
                     - states:DescribeExecution
                     - states:StopExecution
-                  Resource: "*"
+                    - states:DescribeStateMachine
+                    - states:UpdateStateMachine
+                  Resource: '*'
 
     ExecutionRole:
       Type: AWS::IAM::Role
@@ -324,7 +336,8 @@ resources:
             - Effect: Allow
               Principal:
                 Service:
-                  - lambda.amazonaws.com
+                  - states.#{AWS::Region}.amazonaws.com
+                  - "lambda.amazonaws.com"
               Action: sts:AssumeRole
         ManagedPolicyArns:
           - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
