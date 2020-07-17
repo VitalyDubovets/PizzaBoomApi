@@ -24,12 +24,6 @@ def stop_execution(execution_arn, error, cause, *args, **kwargs):
     )
 
 
-def describe_execution(execution_arn, *args, **kwargs):
-    return sfn_client.describe_execution(
-        executionArn=execution_arn, *args, **kwargs
-    )
-
-
 def send_task_success(task_token: str, output: dict = None):
     output = output or {}
     return sfn_client.send_task_success(

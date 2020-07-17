@@ -97,6 +97,16 @@ functions:
           authorizer:
             name: userJwtAuthorizer
 
+  receiveOrder:
+    name: ${self:service}-${self:provider.stage}-api-receive-order
+    handler: pizza_boom/pizza_orders/lambda_functions/api/receive_order.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /api/v1/pizza-orders/{pizza_order_id}/receive
+          authorizer:
+            name: userJwtAuthorizer
+
   cognitoTriggerCustomMessage:
     name: ${self:service}-${opt:stage, self:provider.stage}-custom-message-trigger
     handler: pizza_boom/auth/lambda_triggers/trigger_custom_message.handler
@@ -129,9 +139,17 @@ functions:
           pool: PizzaBoomUsers
           trigger: PreSignUp
 
+  failReceivePizzaOrder:
+    name: ${self:service}-${opt:stage, self:provider.stage}-fail-receive-pizza-order
+    handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/fail_receive_pizza_order.handler
+
   evaluateQuality:
     name: ${self:service}-${opt:stage, self:provider.stage}-evaluate-quality-pizza
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/evaluate_quality.handler
+
+  waitForReceivePizzaOrder:
+    name: ${self:service}-${opt:stage, self:provider.stage}-wait-for-receive-pizza-order
+    handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/wait_for_receive_pizza_order.handler
 
 stepFunctions:
   stateMachines:
@@ -166,6 +184,14 @@ stepFunctions:
                       StateMachineArn:
                         Ref: PreparingFillingStateMachine
                     End: True
+                    Retry:
+                      - ErrorEquals:
+                          - Lambda.ServiceException
+                          - Lambda.AWSLambdaException
+                          - Lambda.SdkClientException
+                        IntervalSeconds: 2
+                        MaxAttempts: 2
+                        BackoffRate: 2
             Next: BakingPizza
           BakingPizza:
             Type: Wait
@@ -176,17 +202,66 @@ stepFunctions:
             Resource:
               Fn::GetAtt: [evaluateQuality, Arn]
             Next: CheckingTheQuality
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 2
+                BackoffRate: 2
           CheckingTheQuality:
             Type: Choice
             Choices:
               - Variable: "$.goodQuality"
                 BooleanEquals: True
-                Next: SucceedCooking
+                Next: WaitForReceivePizzaOrder
               - Variable: "$.goodQuality"
                 BooleanEquals: False
                 Next: PreparationIngredients
-          SucceedCooking:
+          WaitForReceivePizzaOrder:
+            Type: Task
+            Resource: "arn:aws:states:::lambda:invoke.waitForTaskToken"
+            Parameters:
+              FunctionName:
+                Fn::GetAtt: [waitForReceivePizzaOrder, Arn]
+              Payload:
+                task_token.$: "$$.Task.Token"
+                pizza_order_id.$: "$$.Execution.Input.pizza_order_id"
+            Next: SuccessReceivePizza
+            TimeoutSeconds: 300
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 2
+                BackoffRate: 2
+            Catch:
+              - ErrorEquals:
+                  - States.Timeout
+                ResultPath: "$.error_info"
+                Next: NotReceivePizzaOrder
+          SuccessReceivePizza:
             Type: Succeed
+          NotReceivePizzaOrder:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [failReceivePizzaOrder, Arn]
+            Next: FailReceivePizzaOrder
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 2
+                BackoffRate: 2
+          FailReceivePizzaOrder:
+            Type: Fail
+            Cause: Timed out
+
 
     preparingFillings:
       id: PreparingFillingStateMachine

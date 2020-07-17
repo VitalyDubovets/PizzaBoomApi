@@ -29,18 +29,12 @@ def create_pizza_order_and_start_execution(
         settings=settings
     )
 
-    logger.debug(
-        "catch_error_update",
-        pizza_order=json.loads(pizza_order.dumps()),
-        execution_arn=execution_arn
-    )
-
     pizza_order.update(actions=[PizzaOrder.execution_arn.set(execution_arn)])
     message_body = {
         'message': 'Order is created',
         'order': PizzaOrderSchema().dump(pizza_order)
     }
-    return make_response(message_body=message_body, status_code=200)
+    return make_response(message_body=message_body, status_code=201)
 
 
 def _create_pizza_order(event: dict) -> PizzaOrder:
@@ -63,11 +57,11 @@ def _start_pizza_order_state_machine(
     response = stepfunctions.start_execution(
         state_machine_arn=pizza_order_state_machine_arn,
         input_=dict(pizza_order_id=pizza_order_id),
-        name=f"trip_order_id-{pizza_order_id}",
+        name=f"pizza_order_id-{pizza_order_id}",
     )
 
     logger.debug(
-        "Trip order state machine started",
+        "Pizza order state machine started",
         response=response,
     )
 
