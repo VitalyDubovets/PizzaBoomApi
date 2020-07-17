@@ -49,7 +49,6 @@ def _create_user(event: dict) -> UserModel:
     }
     user: UserModel = UserSchemaCreate().load(data=user_data)
     user.save()
-    user.refresh()
     return user
 
 

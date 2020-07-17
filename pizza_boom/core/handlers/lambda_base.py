@@ -19,6 +19,8 @@ class LambdaBase(ABC):
         configure_logging()
         self.logger = structlog.getLogger(f"lambda_function.{self.__class__.__name__}")
 
+        self._settings = settings
+
     def get_handler(self):
         def handler(event, context):
             if isinstance(event, dict) and event.get("source") in [

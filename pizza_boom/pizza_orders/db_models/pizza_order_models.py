@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from enum import Enum
 
@@ -12,7 +13,16 @@ class PizzaStatus(str, Enum):
 
 
 class PizzaOrder(BaseModel):
-    id = UnicodeAttribute(default=lambda: str(uuid.uuid4()))
-    created_at = UTCDateTimeAttribute()
+    class Meta:
+        table_name: str = BaseModel.set_table_name('pizza-orders')
+
+    id = UnicodeAttribute(hash_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = UnicodeAttribute()
+    created_at = UTCDateTimeAttribute(default=datetime.datetime.now())
+    address = UnicodeAttribute()
+    additional_phone = UnicodeAttribute(null=True)
+    note = UnicodeAttribute(null=True)
     status = UnicodeAttribute(default_for_new=PizzaStatus.IN_PROCESS.value)
+
+    execution_arn = UnicodeAttribute(null=True)
     wait_for_receive_pizza_order_token = UnicodeAttribute(null=True)

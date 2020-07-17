@@ -7,6 +7,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     STAGE: ${self:provider.stage}
+    PIZZA_ORDER_STATE_MACHINE_ARN: ${self:custom.pizzaOrderStateMachineArn}
   logs:
     restApi: true
     httpApi: true
@@ -57,11 +58,16 @@ package:
 
 custom:
   config: ${file(settings_default.yml)}
+
   pythonRequirements:
     dockerizePip: true
+
   wsgi:
     app: pizza_boom.api.wsgi.app
     pythonBin: python3
+
+  pizzaOrderStateMachineName: "cookingStateMachine-${self:service}-${opt:stage, self:provider.stage}"
+  pizzaOrderStateMachineArn: "arn:aws:states:#{AWS::Region}:#{AWS::AccountId}:stateMachine:${self:custom.pizzaOrderStateMachineName}"
 
 plugins:
   - serverless-plugin-warmup
@@ -71,13 +77,23 @@ plugins:
   - serverless-wsgi
 
 functions:
-  api:
-    name: ${self:service}-${self:provider.stage}-api
+  apiFlask:
+    name: ${self:service}-${self:provider.stage}-api-flask
     handler: wsgi_handler.handler
     events:
       - httpApi:
-          method: 'PATCH'
+          method: PATCH
           path: /api/v1/users/{proxy+}
+          authorizer:
+            name: userJwtAuthorizer
+
+  createOrder:
+    name: ${self:service}-${self:provider.stage}-api-create-order
+    handler: pizza_boom/pizza_orders/lambda_functions/api/create_order.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /api/v1/pizza-orders
           authorizer:
             name: userJwtAuthorizer
 
@@ -115,7 +131,7 @@ functions:
 
   evaluateQuality:
     name: ${self:service}-${opt:stage, self:provider.stage}-evaluate-quality-pizza
-    handler: pizza_boom/pizza_orders/lambda_functions/evaluate_quality.handler
+    handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/evaluate_quality.handler
 
 stepFunctions:
   stateMachines:
@@ -172,7 +188,6 @@ stepFunctions:
           SucceedCooking:
             Type: Succeed
 
-
     preparingFillings:
       id: PreparingFillingStateMachine
       name: preparingFillingsStateMachine-${self:service}-${opt:stage, self:provider.stage}
@@ -202,6 +217,20 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:service}-${self:provider.stage}-users
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    dynamoPizzaBoomOrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-pizza-orders
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S

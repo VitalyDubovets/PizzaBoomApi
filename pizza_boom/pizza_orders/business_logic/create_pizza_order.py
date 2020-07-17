@@ -1,0 +1,75 @@
+import json
+
+import structlog
+from marshmallow.exceptions import ValidationError
+
+from pizza_boom.configs import Settings
+from pizza_boom.core.aws import stepfunctions
+from pizza_boom.core.utils import make_response
+from pizza_boom.pizza_orders.db_models.pizza_order_models import PizzaOrder
+from pizza_boom.pizza_orders.schemas import PizzaOrderCreateSchema, PizzaOrderSchema
+from pizza_boom.users.utils import get_cognito_user_data
+
+
+logger = structlog.get_logger()
+
+
+def create_pizza_order_and_start_execution(
+        event: dict, settings: Settings
+):
+    try:
+        pizza_order = _create_pizza_order(event)
+    except ValidationError:
+        return make_response(
+            message_body={'message': 'Address is empty'}, status_code=404
+        )
+
+    execution_arn: str = _start_pizza_order_state_machine(
+        pizza_order_id=pizza_order.id,
+        settings=settings
+    )
+
+    logger.debug(
+        "catch_error_update",
+        pizza_order=json.loads(pizza_order.dumps()),
+        execution_arn=execution_arn
+    )
+
+    pizza_order.update(actions=[PizzaOrder.execution_arn.set(execution_arn)])
+    message_body = {
+        'message': 'Order is created',
+        'order': PizzaOrderSchema().dump(pizza_order)
+    }
+    return make_response(message_body=message_body, status_code=200)
+
+
+def _create_pizza_order(event: dict) -> PizzaOrder:
+    user_data: dict = get_cognito_user_data(event)
+    logger.debug(
+        "create_pizza_order",
+        user_data=user_data,
+        body=json.loads(event['body'])
+    )
+    pizza_order: PizzaOrder = PizzaOrderCreateSchema().loads(event['body'])
+    pizza_order.user_id = user_data.get('custom:dynamo_user_id')
+    pizza_order.save()
+    return pizza_order
+
+
+def _start_pizza_order_state_machine(
+    pizza_order_id: str, settings: Settings
+) -> str:
+    pizza_order_state_machine_arn = settings.get_value("PIZZA_ORDER_STATE_MACHINE_ARN")
+    response = stepfunctions.start_execution(
+        state_machine_arn=pizza_order_state_machine_arn,
+        input_=dict(pizza_order_id=pizza_order_id),
+        name=f"trip_order_id-{pizza_order_id}",
+    )
+
+    logger.debug(
+        "Trip order state machine started",
+        response=response,
+    )
+
+    execution_arn: str = response["executionArn"]
+    return execution_arn
