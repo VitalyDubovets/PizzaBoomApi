@@ -19,19 +19,8 @@ class PostConfirmationLambdaTrigger(LambdaBase):
             trigger_event=event,
         )
         if event['triggerSource'] == 'PostConfirmation_ConfirmSignUp':
-            client = boto3.client('cognito-idp')
-            user: UserModel = _create_user(event)
+            user: UserModel = _create_user_and_update_user_attributes(event)
 
-            client.admin_update_user_attributes(
-                UserPoolId=event['userPoolId'],
-                Username=event['userName'],
-                UserAttributes=[
-                    {
-                      "Name": "custom:dynamo_user_id",
-                      "Value": user.id
-                    },
-                ]
-            )
             logger.debug(
                 "user_post_confirmation_save",
                 user_id=user.id,
@@ -49,6 +38,23 @@ def _create_user(event: dict) -> UserModel:
     }
     user: UserModel = UserSchemaCreate().load(data=user_data)
     user.save()
+    return user
+
+
+def _create_user_and_update_user_attributes(event: dict) -> UserModel:
+    client = boto3.client('cognito-idp')
+    user: UserModel = _create_user(event)
+
+    client.admin_update_user_attributes(
+        UserPoolId=event['userPoolId'],
+        Username=event['userName'],
+        UserAttributes=[
+            {
+                "Name": "custom:dynamo_user_id",
+                "Value": user.id
+            },
+        ]
+    )
     return user
 
 

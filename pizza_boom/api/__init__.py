@@ -9,7 +9,7 @@ from pizza_boom.users.errors import user_errors_dict
 def create_app():
     configure_logging()
 
-    errors = {
+    errors: dict = {
         **user_errors_dict
     }
 
