@@ -21,7 +21,7 @@ def create_pizza_order_and_start_execution(
         pizza_order = _create_pizza_order(event)
     except ValidationError:
         return make_response(
-            message_body={'message': 'Address is empty'}, status_code=404
+            message_body={'message': 'Address is empty'}, status_code=400
         )
 
     execution_arn: str = _start_pizza_order_state_machine(

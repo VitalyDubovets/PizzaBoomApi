@@ -1,16 +1,17 @@
 import marshmallow
 
 from pizza_boom.users.db_models.user_models import UserModel
-from pizza_boom.users.errors import NotFoundRequestDataError, UserNotFoundError
+from pizza_boom.users.errors import NotFoundRequiredDataError, UserNotFoundError
 from pizza_boom.users.schemas import GetUserSchema, PatchUserSchema
 
 
 def patch_user(user_id: str, json_data: dict) -> dict:
     patch_schema: PatchUserSchema = PatchUserSchema(unknown=marshmallow.EXCLUDE)
-    user_patch_data: dict = patch_schema.load(json_data)
 
-    if not user_patch_data:
-        raise NotFoundRequestDataError
+    try:
+        user_patch_data: dict = patch_schema.load(json_data)
+    except marshmallow.exceptions.ValidationError:
+        raise NotFoundRequiredDataError
 
     schema: GetUserSchema = GetUserSchema()
     try:

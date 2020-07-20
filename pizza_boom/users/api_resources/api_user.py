@@ -25,6 +25,4 @@ class UserAPI(Resource):
         )
 
         user_data: dict = patch_user(user_id=user_id, json_data=json_data)
-        return {
-            'user': user_data
-        }, 200
+        return user_data, 200

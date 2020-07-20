@@ -1,0 +1,323 @@
+openapi: "3.0.2"
+info:
+  title: "PizzaBoom API"
+  description: This is an API for ordering pizza in pizzeria "PizzaBoom", editing users, etc.
+  version: "1.0"
+  contact:
+    name: "Vitaly"
+    email: "dubovetsvitaliy@gmail.com"
+    
+servers: 
+  - url: "https://<your_api_id>.execute-api.<your_region>.amazonaws.com/api/v1"
+  
+paths:
+
+  /users/{user_id}:
+    patch:
+      summary: Update user
+      description: Updating a user in Cognito UserPool and DynamoDB
+      tags: 
+        - Users
+      security: 
+        - authorize: []
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+      
+      requestBody:
+        description: Request data for patch a user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/patchRequestDataSchema'
+        required: True
+      
+      responses:
+      
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/patchUserResponseSchema'
+                        
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/erorrSchema'
+                    
+        400:
+          description: Bad request
+          content:
+            application/json:
+             schema:
+               $ref: '#/components/schemas/erorrSchema'
+  
+  /pizza-orders:
+    get:
+      summary: Get pizza orders
+      description: Endpoint for getting all or filtered pizza orders
+      tags: 
+        - PizzaOrders
+      parameters: 
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/order_status'
+      
+      responses:
+        200: 
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getOrdersSchema'
+    
+    post:
+      summary: Create pizza order
+      description: Enpoint for creating pizza order and starting state machine
+      tags: 
+        - PizzaOrders
+      requestBody:
+        description: Request data for creating order
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createOrderSchema'
+        required: True
+      
+      responses:
+      
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseOrderSchema'
+        
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/erorrAwsSchema'
+  
+  /pizza-orders/{pizza_order_id}/receive:
+    
+    post:
+      summary: Callback request for receiving a pizza order
+      description: Endpoint for sending callback to state machine, that pizza order was receiving and task was completed
+      tags: 
+        - Order request state machines
+      parameters: 
+       - $ref: '#/components/parameters/pizza_order_id'
+      
+      responses:
+      
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseOrderSchema'
+        
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/erorrAwsSchema'
+      
+components:
+
+  parameters:
+  
+    user_id:
+      schema:
+        type: string
+      name: user_id
+      in: path
+      required: true
+    
+    pizza_order_id:
+      schema:
+        type: string
+      name: pizza_order_id
+      in: path
+      required: true
+    
+    limit:
+      schema:
+        type: string
+        default: 0
+      name: limit
+      in: query
+    
+    order_status:
+      schema:
+        type: string
+        enum: 
+          - in_process
+          - received
+          - not_received
+        default: received
+      name: status
+      in: query
+      
+      
+  
+  schemas:
+    
+    createOrderSchema:
+      description: Schema for creating pizza order
+      type: object
+      required: 
+        - address
+      properties:
+        address:
+          description: Delivery address
+          type: string
+        additional_phone:
+          description: Additional phone for calling
+          type: string
+        note:
+          description: Notes to an order
+          type: string
+    
+    responseOrderSchema:
+      description: Successful reponse schema after create order
+      type: object
+      properties:
+        message:
+          description: Message in request data with information
+          type: string
+        order: 
+          $ref: '#/components/schemas/orderSchema'
+          
+    
+    getOrdersSchema:
+      description: Schema for array with objects of users 
+      type: array
+      items:
+        $ref: '#/components/schemas/orderSchema'
+    
+    orderSchema:
+      description: Commom order schema
+      type: object
+      properties:
+        id:
+          description: Order's id
+          type: string
+        user_id:
+          description: User's id
+          type: string
+        address: 
+          description: Delivery address
+          type: string
+        additional_phone:
+          description: Additional phone number for calling
+          type: string
+          additionalProperties:
+            type: boolean
+        note:
+          description: Notes to an order
+          type: string
+          additionalProperties:
+            type: boolean
+        status:
+          description: Status of order
+          type: string
+        delivered_at: 
+          description: Delivery date and time
+          type: string
+          additionalProperties:
+            type: boolean
+        created_at:
+          description: Date of creation order
+  
+    patchUserResponseSchema:
+      description: Successful response schema after patch a user
+      type: object
+      properties:
+        id:
+          description: User's id
+          type: string
+        email:
+          description: User's email
+          type: string
+        username:
+          description: User's username in a service
+          type: string
+        first_name: 
+          description: User's first name
+          type: string
+          additionalProperties:
+            type: boolean
+        last_name: 
+          description: User's last name
+          type: string
+          additionalProperties:
+            type: boolean
+        last_sign_in:
+          description: Date of last sign in to the service
+          type: string
+        created_at:
+          description: Date of creating a user
+          type: string
+        phone: 
+          description: User's phone
+          type: string
+          additionalProperties:
+            type: boolean
+    
+    patchRequestDataSchema:
+      description: Data for PATCH request
+      type: object
+      required: 
+        - first_name
+        - last_name
+        - phone 
+      properties:
+        first_name:
+          description: User's first name
+          type: string
+        last_name: 
+          description: User's last name
+          type: string
+        phone:
+          description: User's phone
+          type: string
+      
+              
+    erorrSchema:
+      description: Common error schema for flask application
+      type: object
+      properties:
+        message:
+          type: string
+          description: Reason of error
+        status:
+          type: number
+          description: HTTP status code
+          
+    erorrAwsSchema:
+      description: Common error schema for AWS 
+      type: object
+      properties:
+        message:
+          type: string
+          description: Reason of error
+          
+  securitySchemes:
+    authorize:
+      description: Authorization with IdToken
+      name: Authorization
+      type: apiKey
+      in: header
+
+tags:
+  - name: Users
+    description: "API Users"
+  - name: PizzaOrders
+    description: "API Pizza Orders"
+  - name: Order request state machines
+    

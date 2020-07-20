@@ -6,16 +6,16 @@ user_errors_dict = {
         "message": "User not found",
         "status": 404
     },
-    "NotFoundRequestDataError": {
-        "message": "Request data is empty",
+    "NotFoundRequiredDataError": {
+        "message": "Required data not found. Please, fill your first name, last name and phone",
         "status": 400
     }
 }
 
 
-class NotFoundRequestDataError(HTTPException):
+class NotFoundRequiredDataError(HTTPException):
     status: int = 400
-    description: str = "Request data is empty"
+    description: str = "Required data not found"
 
 
 class UserNotFoundError(HTTPException):
