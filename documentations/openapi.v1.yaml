@@ -28,7 +28,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/patchRequestDataSchema'
+              $ref: '#/components/schemas/patchUserRequestDataSchema'
         required: True
       
       responses:
@@ -269,7 +269,7 @@ components:
           additionalProperties:
             type: boolean
     
-    patchRequestDataSchema:
+    patchUserRequestDataSchema:
       description: Data for PATCH request
       type: object
       required: 
