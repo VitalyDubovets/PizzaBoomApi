@@ -1,0 +1,203 @@
+service: pizza-boom-auth
+
+provider:
+  name: aws
+  runtime: python3.8
+  role: ExecutionRole
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${self:provider.stage}
+
+package:
+  individually: false
+  exclude:
+    - .git/**
+    - .cache/**
+    - venv/**
+    - node_modules/**
+    - .serverless/**
+
+custom:
+  config: ${file(settings_default.yml)}
+
+  pythonRequirements:
+    dockerizePip: true
+
+plugins:
+  - serverless-plugin-warmup
+  - serverless-pseudo-parameters
+  - serverless-python-requirements
+
+functions:
+  cognitoTriggerCustomMessage:
+    name: ${self:service}-${opt:stage, self:provider.stage}-custom-message-trigger
+    handler: pizza_boom/auth/lambda_triggers/trigger_custom_message.handler
+    events:
+      - cognitoUserPool:
+          pool: PizzaBoomUsers
+          trigger: CustomMessage
+
+  cognitoTriggerPostAuthentication:
+    name: ${self:service}-${opt:stage, self:provider.stage}-post-authentication-trigger
+    handler: pizza_boom/auth/lambda_triggers/trigger_post_authentication.handler
+    events:
+      - cognitoUserPool:
+          pool: PizzaBoomUsers
+          trigger: PostAuthentication
+
+  cognitoTriggerPostConfirmation:
+    name: ${self:service}-${opt:stage, self:provider.stage}-post-confirmation-trigger
+    handler: pizza_boom/auth/lambda_triggers/trigger_post_confirmation.handler
+    events:
+      - cognitoUserPool:
+          pool: PizzaBoomUsers
+          trigger: PostConfirmation
+
+  cognitoTriggerPreSignUp:
+    name: ${self:service}-${opt:stage, self:provider.stage}-pre-sign-up-trigger
+    handler: pizza_boom/auth/lambda_triggers/trigger_pre_sign_up.handler
+    events:
+      - cognitoUserPool:
+          pool: PizzaBoomUsers
+          trigger: PreSignUp
+
+resources:
+  Resources:
+    CognitoUserPoolPizzaBoomUsers:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        AliasAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        MfaConfiguration: OFF
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+            RequireUppercase: true
+            TemporaryPasswordValidityDays: 14
+        Schema:
+          - Name: email
+            AttributeDataType: String
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: true
+          - Name: username
+            Required: false
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            AttributeDataType: String
+          - Name: dynamo_user_id
+            Required: false
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            AttributeDataType: String
+        UserPoolName: ${self:service}-${self:provider.stage}-users-pool
+
+    pizzaBoomUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - email
+          - phone
+          - openid
+          - profile
+          - aws.cognito.signin.user.admin
+        CallbackURLs:
+          - https://google.com
+        ClientName: ${self:service}-users-app
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        RefreshTokenValidity: 15
+        SupportedIdentityProviders:
+          - COGNITO
+        UserPoolId:
+          Ref: CognitoUserPoolPizzaBoomUsers
+
+    pizzaBoomUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId:
+          Ref: CognitoUserPoolPizzaBoomUsers
+        Domain: ${self:provider.stage}-users-${self:service}
+
+    ExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        RoleName: ${self:service}-${self:provider.stage}-lambda-execution-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - states.#{AWS::Region}.amazonaws.com
+                  - "lambda.amazonaws.com"
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+        Policies:
+          - PolicyName: access-execution
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:BatchGetItem
+                    - dynamodb:BatchWriteItem
+                    - dynamodb:DeleteItem
+                    - dynamodb:DescribeStream
+                    - dynamodb:DescribeTable
+                    - dynamodb:GetItem
+                    - dynamodb:GetRecords
+                    - dynamodb:GetShardIterator
+                    - dynamodb:ListStreams
+                    - dynamodb:PutItem
+                    - dynamodb:Query
+                    - dynamodb:Scan
+                    - dynamodb:UpdateItem
+                  Resource: arn:aws:dynamodb:*:*:table/${self:custom.config.PREFIX_TABLE}-${self:provider.stage}*
+                - Effect: Allow
+                  Action:
+                    - states:StartExecution
+                    - states:SendTaskSuccess
+                    - states:SendTaskFailure
+                    - states:GetActivityTask
+                    - states:DescribeExecution
+                    - states:StopExecution
+                    - states:DescribeStateMachine
+                    - states:UpdateStateMachine
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - cognito-idp:AdminListGroupsForUser
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - cognito-idp:*
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource:
+                    - Fn::Join:
+                        - ':'
+                        - - arn:aws:lambda
+                          - Ref: AWS::Region
+                          - Ref: AWS::AccountId
+                          - function:${self:service}-${opt:stage, self:provider.stage}-*
+
+  Outputs:
+    CognitoUserPoolPizzaBoomUsersId:
+      Value: "#{CognitoUserPoolPizzaBoomUsers}"
+    pizzaBoomUserPoolClientId:
+      Value: "#{pizzaBoomUserPoolClient}"

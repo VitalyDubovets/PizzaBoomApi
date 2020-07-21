@@ -1,0 +1,205 @@
+service: pizza-boom-api
+
+provider:
+  name: aws
+  runtime: python3.8
+  role: ExecutionRole
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${self:provider.stage}
+    PIZZA_ORDER_STATE_MACHINE_ARN: ${self:custom.pizzaOrderStateMachineArn}
+  logs:
+    restApi: true
+    httpApi: true
+  httpApi:
+    cors:
+      allowedOrigins: "*"
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - x-amz-date
+        - x-api-key
+        - x-amz-security-token
+        - x-amz-user-agent
+      allowedMethods:
+        - OPTIONS
+        - GET
+        - POST
+        - PATCH
+        - PUT
+        - DELETE
+        - HEAD
+      allowCredentials: false
+      #      exposedResponseHeaders:
+      maxAge: 0 # In seconds
+
+    authorizers:
+      userJwtAuthorizer:
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.#{AWS::Region}.amazonaws.com/${cf:${self:custom.authStackName}.CognitoUserPoolPizzaBoomUsersId}
+        audience:
+          - ${cf:${self:custom.authStackName}.pizzaBoomUserPoolClientId}
+
+package:
+  individually: false
+  exclude:
+    - .git/**
+    - .cache/**
+    - venv/**
+    - node_modules/**
+    - .serverless/**
+
+custom:
+  config: ${file(settings_default.yml)}
+  apiStackName: ${self:service}-${self:provider.stage}
+  orderSmStackName: pizza-boom-sm-${self:provider.stage}
+  authStackName: pizza-boom-auth-${self:provider.stage}
+
+  pizzaOrderStateMachineName: "cookingStateMachine-${self:custom.orderSmStackName}"
+  pizzaOrderStateMachineArn: "arn:aws:states:#{AWS::Region}:#{AWS::AccountId}:stateMachine:${self:custom.pizzaOrderStateMachineName}"
+
+
+  pythonRequirements:
+    dockerizePip: true
+
+  wsgi:
+    app: pizza_boom.api.wsgi.app
+    pythonBin: python3
+
+plugins:
+  - serverless-plugin-warmup
+  - serverless-pseudo-parameters
+  - serverless-python-requirements
+  - serverless-step-functions
+  - serverless-wsgi
+
+functions:
+  apiFlask:
+    name: ${self:service}-${self:provider.stage}-api-flask
+    handler: wsgi_handler.handler
+    events:
+      - httpApi:
+          method: PATCH
+          path: /api/v1/users/{proxy+}
+          authorizer:
+            name: userJwtAuthorizer
+      - httpApi:
+          method: GET
+          path: /api/v1/pizza-orders
+
+  createOrder:
+    name: ${self:service}-${self:provider.stage}-api-create-order
+    handler: pizza_boom/pizza_orders/lambda_functions/api/create_order.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /api/v1/pizza-orders
+          authorizer:
+            name: userJwtAuthorizer
+
+  receiveOrder:
+    name: ${self:service}-${self:provider.stage}-api-receive-order
+    handler: pizza_boom/pizza_orders/lambda_functions/api/receive_order.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /api/v1/pizza-orders/{pizza_order_id}/receive
+          authorizer:
+            name: userJwtAuthorizer
+
+resources:
+  Resources:
+    dynamoPizzaBoomUsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.config.PREFIX_TABLE}-${self:provider.stage}-users
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    dynamoPizzaBoomOrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.config.PREFIX_TABLE}-${self:provider.stage}-pizza-orders
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    ExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        RoleName: ${self:service}-${self:provider.stage}-lambda-execution-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - states.#{AWS::Region}.amazonaws.com
+                  - "lambda.amazonaws.com"
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+        Policies:
+          - PolicyName: access-execution
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:BatchGetItem
+                    - dynamodb:BatchWriteItem
+                    - dynamodb:DeleteItem
+                    - dynamodb:DescribeStream
+                    - dynamodb:DescribeTable
+                    - dynamodb:GetItem
+                    - dynamodb:GetRecords
+                    - dynamodb:GetShardIterator
+                    - dynamodb:ListStreams
+                    - dynamodb:PutItem
+                    - dynamodb:Query
+                    - dynamodb:Scan
+                    - dynamodb:UpdateItem
+                  Resource: arn:aws:dynamodb:*:*:table/${self:custom.config.PREFIX_TABLE}-${self:provider.stage}*
+                - Effect: Allow
+                  Action:
+                    - states:StartExecution
+                    - states:SendTaskSuccess
+                    - states:SendTaskFailure
+                    - states:GetActivityTask
+                    - states:DescribeExecution
+                    - states:StopExecution
+                    - states:DescribeStateMachine
+                    - states:UpdateStateMachine
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - cognito-idp:AdminListGroupsForUser
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - cognito-idp:*
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource:
+                    - Fn::Join:
+                        - ':'
+                        - - arn:aws:lambda
+                          - Ref: AWS::Region
+                          - Ref: AWS::AccountId
+                          - function:${self:service}-${opt:stage, self:provider.stage}-*
