@@ -2,7 +2,7 @@ import marshmallow
 
 from pizza_boom.users.db_models.user_models import UserModel
 from pizza_boom.users.errors import NotFoundRequiredDataError, UserNotFoundError
-from pizza_boom.users.schemas import GetUserSchema, PatchUserSchema
+from pizza_boom.users.schemas.user import GetUserSchema, PatchUserSchema
 
 
 def patch_user(user_id: str, json_data: dict) -> dict:

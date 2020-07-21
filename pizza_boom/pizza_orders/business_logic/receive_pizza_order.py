@@ -9,7 +9,7 @@ from pizza_boom.core.aws import stepfunctions
 from pizza_boom.core.aws.custom_errors import AwsError, TaskTimedOut
 from pizza_boom.core.utils import make_response
 from pizza_boom.pizza_orders.db_models.pizza_order_models import PizzaOrder, PizzaStatus
-from pizza_boom.pizza_orders.schemas import PizzaOrderSchema
+from pizza_boom.pizza_orders.schemas.pizza_order import PizzaOrderSchema
 
 
 logger = structlog.get_logger()

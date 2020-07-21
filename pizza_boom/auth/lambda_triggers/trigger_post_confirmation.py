@@ -6,7 +6,7 @@ import structlog
 
 from pizza_boom.core.handlers import LambdaBase, lambda_injector
 from pizza_boom.users.db_models.user_models import UserModel
-from pizza_boom.users.schemas import UserSchemaCreate
+from pizza_boom.users.schemas.user import UserSchemaCreate
 
 
 logger = structlog.get_logger()

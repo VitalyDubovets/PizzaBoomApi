@@ -324,8 +324,6 @@ resources:
       Properties:
         AliasAttributes:
           - email
-        AutoVerifiedAttributes:
-          - email
         MfaConfiguration: OFF
         Policies:
           PasswordPolicy:

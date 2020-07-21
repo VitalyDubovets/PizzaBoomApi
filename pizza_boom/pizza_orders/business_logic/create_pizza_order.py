@@ -7,7 +7,7 @@ from pizza_boom.configs import Settings
 from pizza_boom.core.aws import stepfunctions
 from pizza_boom.core.utils import make_response
 from pizza_boom.pizza_orders.db_models.pizza_order_models import PizzaOrder
-from pizza_boom.pizza_orders.schemas import PizzaOrderCreateSchema, PizzaOrderSchema
+from pizza_boom.pizza_orders.schemas.pizza_order import PizzaOrderCreateSchema, PizzaOrderSchema
 from pizza_boom.users.utils import get_cognito_user_data
 
 

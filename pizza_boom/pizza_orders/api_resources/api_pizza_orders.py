@@ -5,7 +5,7 @@ import structlog
 from flask_restful import Resource
 
 from pizza_boom.pizza_orders.db_models.pizza_order_models import PizzaOrder, PizzaStatus
-from pizza_boom.pizza_orders.schemas import PizzaOrderSchema
+from pizza_boom.pizza_orders.schemas.pizza_order import PizzaOrderSchema
 
 
 logger = structlog.get_logger()
