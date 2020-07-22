@@ -1,0 +1,24 @@
+id: PreparingFillingStateMachine
+name: preparingFillingsStateMachine-${self:service}-${opt:stage, self:provider.stage}
+role:
+  Fn::GetAtt: [StepFunctionsExecutionRole, Arn]
+dependsOn:
+  - StepFunctionsExecutionRole
+  - ExecutionRole
+definition:
+  Comment: "Start to prepare filling"
+  StartAt: WashingFood
+  States:
+
+    WashingFood:
+      Type: Wait
+      Seconds: 20
+      Next: SlicingFood
+      
+    SlicingFood:
+      Type: Wait
+      Seconds: 30
+      Next: SuccessPrepareFood
+
+    SuccessPrepareFood:
+      Type: Succeed

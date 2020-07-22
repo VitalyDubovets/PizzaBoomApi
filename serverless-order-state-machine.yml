@@ -35,151 +35,28 @@ plugins:
 
 functions:
   failReceivePizzaOrder:
-    name: ${self:service}-${opt:stage, self:provider.stage}-fail-receive-pizza-order
+    name: ${self:service}-${opt:stage}-fail-receive-pizza-order
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/fail_receive_pizza_order.handler
 
+  pizzaOrderFailed:
+    name: ${self:service}-${opt:stage}-pizza-order-fail
+    handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/order_failed.handler
+
   evaluateQuality:
-    name: ${self:service}-${opt:stage, self:provider.stage}-evaluate-quality-pizza
+    name: ${self:service}-${opt:stage}-evaluate-quality-pizza
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/evaluate_quality.handler
 
   waitForReceivePizzaOrder:
-    name: ${self:service}-${opt:stage, self:provider.stage}-wait-for-receive-pizza-order
+    name: ${self:service}-${opt:stage}-wait-for-receive-pizza-order
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/wait_for_receive_pizza_order.handler
 
 stepFunctions:
   stateMachines:
     cooking:
-      id: CookingStateMachine
-      name: cookingStateMachine-${self:service}-${opt:stage, self:provider.stage}
-      role:
-        Fn::GetAtt: [StepFunctionsExecutionRole, Arn]
-      dependsOn:
-        - StepFunctionsExecutionRole
-        - ExecutionRole
-      definition:
-        Comment: "Cooking State Machine"
-        StartAt: PreparationIngredients
-        States:
-          PreparationIngredients:
-            Type: Parallel
-            ResultPath: "$.results"
-            Branches:
-              - StartAt: PreparingDough
-                States:
-                  PreparingDough:
-                    Type: Wait
-                    Seconds: 50
-                    End: True
-              - StartAt: PreparingFilling
-                States:
-                  PreparingFilling:
-                    Type: Task
-                    Resource: "arn:aws:states:::states:startExecution.sync:2"
-                    Parameters:
-                      StateMachineArn:
-                        Ref: PreparingFillingStateMachine
-                    End: True
-                    Retry:
-                      - ErrorEquals:
-                          - Lambda.ServiceException
-                          - Lambda.AWSLambdaException
-                          - Lambda.SdkClientException
-                        IntervalSeconds: 2
-                        MaxAttempts: 2
-                        BackoffRate: 2
-            Next: BakingPizza
-          BakingPizza:
-            Type: Wait
-            Seconds: 30
-            Next: EvaluationQuality
-          EvaluationQuality:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [evaluateQuality, Arn]
-            Next: CheckingTheQuality
-            Retry:
-              - ErrorEquals:
-                  - Lambda.ServiceException
-                  - Lambda.AWSLambdaException
-                  - Lambda.SdkClientException
-                IntervalSeconds: 2
-                MaxAttempts: 2
-                BackoffRate: 2
-          CheckingTheQuality:
-            Type: Choice
-            Choices:
-              - Variable: "$.goodQuality"
-                BooleanEquals: True
-                Next: WaitForReceivePizzaOrder
-              - Variable: "$.goodQuality"
-                BooleanEquals: False
-                Next: PreparationIngredients
-          WaitForReceivePizzaOrder:
-            Type: Task
-            Resource: "arn:aws:states:::lambda:invoke.waitForTaskToken"
-            Parameters:
-              FunctionName:
-                Fn::GetAtt: [waitForReceivePizzaOrder, Arn]
-              Payload:
-                task_token.$: "$$.Task.Token"
-                pizza_order_id.$: "$$.Execution.Input.pizza_order_id"
-            Next: SuccessReceivePizza
-            TimeoutSeconds: 300
-            Retry:
-              - ErrorEquals:
-                  - Lambda.ServiceException
-                  - Lambda.AWSLambdaException
-                  - Lambda.SdkClientException
-                IntervalSeconds: 2
-                MaxAttempts: 2
-                BackoffRate: 2
-            Catch:
-              - ErrorEquals:
-                  - States.Timeout
-                ResultPath: "$.error_info"
-                Next: NotReceivePizzaOrder
-          SuccessReceivePizza:
-            Type: Succeed
-          NotReceivePizzaOrder:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [failReceivePizzaOrder, Arn]
-            Next: FailReceivePizzaOrder
-            Retry:
-              - ErrorEquals:
-                  - Lambda.ServiceException
-                  - Lambda.AWSLambdaException
-                  - Lambda.SdkClientException
-                IntervalSeconds: 2
-                MaxAttempts: 2
-                BackoffRate: 2
-          FailReceivePizzaOrder:
-            Type: Fail
-            Cause: Timed out
-
+      ${file(./serverless_templates/state_machines/cooking-state-machine.yml)}
 
     preparingFillings:
-      id: PreparingFillingStateMachine
-      name: preparingFillingsStateMachine-${self:service}-${opt:stage, self:provider.stage}
-      role:
-        Fn::GetAtt: [StepFunctionsExecutionRole, Arn]
-      dependsOn:
-        - StepFunctionsExecutionRole
-        - ExecutionRole
-      definition:
-        Comment: "Start to prepare filling"
-        StartAt: WashingFood
-        States:
-          WashingFood:
-            Type: Wait
-            Seconds: 20
-            Next: SlicingFood
-          SlicingFood:
-            Type: Wait
-            Seconds: 30
-            Next: SuccessPrepareFood
-          SuccessPrepareFood:
-            Type: Succeed
+      ${file(./serverless_templates/state_machines/preparing-fillings-state-machine.yml)}
 
 resources:
   Resources:

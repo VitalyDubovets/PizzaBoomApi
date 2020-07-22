@@ -11,6 +11,7 @@ class PizzaStatus(str, Enum):
     IN_PROCESS = "in_process"
     RECEIVED = "received"
     NOT_RECEIVED = "not_received"
+    FAILED = 'failed'
 
 
 class PizzaOrder(BaseModel):
