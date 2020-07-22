@@ -35,19 +35,19 @@ plugins:
 
 functions:
   failReceivePizzaOrder:
-    name: ${self:service}-${opt:stage, self:provider.stage}-fail-receive-pizza-order
+    name: ${self:service}-${self:provider.stage}-fail-receive-pizza-order
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/fail_receive_pizza_order.handler
 
   pizzaOrderFailed:
-    name: ${self:service}-${opt:stage, self:provider.stage}-pizza-order-fail
+    name: ${self:service}-${self:provider.stage}-pizza-order-fail
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/order_failed.handler
 
   evaluateQuality:
-    name: ${self:service}-${opt:stage, self:provider.stage}-evaluate-quality-pizza
+    name: ${self:service}-${self:provider.stage}-evaluate-quality-pizza
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/evaluate_quality.handler
 
   waitForReceivePizzaOrder:
-    name: ${self:service}-${opt:stage, self:provider.stage}-wait-for-receive-pizza-order
+    name: ${self:service}-${self:provider.stage}-wait-for-receive-pizza-order
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/wait_for_receive_pizza_order.handler
 
 stepFunctions:
@@ -172,4 +172,4 @@ resources:
                         - - arn:aws:lambda
                           - Ref: AWS::Region
                           - Ref: AWS::AccountId
-                          - function:${self:service}-${opt:stage, self:provider.stage}-*
+                          - function:${self:service}-${self:provider.stage}-*

@@ -1,5 +1,5 @@
 id: CookingStateMachine
-name: cookingStateMachine-${self:service}-${opt:stage, self:provider.stage}
+name: cookingStateMachine-${self:service}-${self:provider.stage}
 role:
   Fn::GetAtt: [StepFunctionsExecutionRole, Arn]
 dependsOn:

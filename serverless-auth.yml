@@ -30,7 +30,7 @@ plugins:
 
 functions:
   cognitoTriggerCustomMessage:
-    name: ${self:service}-${opt:stage, self:provider.stage}-custom-message-trigger
+    name: ${self:service}-${self:provider.stage}-custom-message-trigger
     handler: pizza_boom/auth/lambda_triggers/trigger_custom_message.handler
     events:
       - cognitoUserPool:
@@ -38,7 +38,7 @@ functions:
           trigger: CustomMessage
 
   cognitoTriggerPostAuthentication:
-    name: ${self:service}-${opt:stage, self:provider.stage}-post-authentication-trigger
+    name: ${self:service}-${self:provider.stage}-post-authentication-trigger
     handler: pizza_boom/auth/lambda_triggers/trigger_post_authentication.handler
     events:
       - cognitoUserPool:
@@ -46,7 +46,7 @@ functions:
           trigger: PostAuthentication
 
   cognitoTriggerPostConfirmation:
-    name: ${self:service}-${opt:stage, self:provider.stage}-post-confirmation-trigger
+    name: ${self:service}-${self:provider.stage}-post-confirmation-trigger
     handler: pizza_boom/auth/lambda_triggers/trigger_post_confirmation.handler
     events:
       - cognitoUserPool:
@@ -54,7 +54,7 @@ functions:
           trigger: PostConfirmation
 
   cognitoTriggerPreSignUp:
-    name: ${self:service}-${opt:stage, self:provider.stage}-pre-sign-up-trigger
+    name: ${self:service}-${self:provider.stage}-pre-sign-up-trigger
     handler: pizza_boom/auth/lambda_triggers/trigger_pre_sign_up.handler
     events:
       - cognitoUserPool:
@@ -194,7 +194,7 @@ resources:
                         - - arn:aws:lambda
                           - Ref: AWS::Region
                           - Ref: AWS::AccountId
-                          - function:${self:service}-${opt:stage, self:provider.stage}-*
+                          - function:${self:service}-${self:provider.stage}-*
 
   Outputs:
     CognitoUserPoolPizzaBoomUsersId:

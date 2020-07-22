@@ -1,5 +1,5 @@
 id: PreparingFillingStateMachine
-name: preparingFillingsStateMachine-${self:service}-${opt:stage, self:provider.stage}
+name: preparingFillingsStateMachine-${self:service}-${self:provider.stage}
 role:
   Fn::GetAtt: [StepFunctionsExecutionRole, Arn]
 dependsOn:

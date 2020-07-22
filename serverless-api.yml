@@ -202,4 +202,4 @@ resources:
                         - - arn:aws:lambda
                           - Ref: AWS::Region
                           - Ref: AWS::AccountId
-                          - function:${self:service}-${opt:stage, self:provider.stage}-*
+                          - function:${self:service}-${self:provider.stage}-*
