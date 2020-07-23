@@ -12,12 +12,12 @@ definition:
 
     WashingFood:
       Type: Wait
-      Seconds: 20
+      Seconds: 10
       Next: SlicingFood
       
     SlicingFood:
       Type: Wait
-      Seconds: 30
+      Seconds: 10
       Next: SuccessPrepareFood
 
     SuccessPrepareFood:

@@ -18,7 +18,7 @@ definition:
           States:
             PreparingDough:
               Type: Wait
-              Seconds: 50
+              Seconds: 10
               End: True
         - StartAt: PreparingFilling
           States:
@@ -41,7 +41,7 @@ definition:
 
     BakingPizza:
       Type: Wait
-      Seconds: 30
+      Seconds: 10
       Next: EvaluationQuality
 
     EvaluationQuality:
@@ -116,7 +116,7 @@ definition:
 
     FailReceivePizzaOrder:
       Type: Fail
-      Cause: Timed out'
+      Cause: Timed out
 
     PizzaOrderFailed:
       Type: Task

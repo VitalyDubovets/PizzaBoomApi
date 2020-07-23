@@ -28,7 +28,7 @@ def user_pool(cognito_idp_client) -> UserPool:
     return get_user_pool(cognito_idp_client)
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope='module')
 def generate_user_api_client(user_pool: UserPool, cognito_idp_client):
     users: List[User] = []
 

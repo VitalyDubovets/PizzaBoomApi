@@ -1,3 +1,5 @@
+from typing import Optional
+
 import backoff
 import structlog
 from decouple import config
@@ -54,7 +56,7 @@ class UserAPIClient:
             url = url.replace("<user_id>", self.user.dynamo_user_id)
 
         if self.user.pizza_order_id:
-            url = url.replace('pizza_order_id', self.user.pizza_order_id)
+            url = url.replace('<pizza_order_id>', self.user.pizza_order_id)
 
         base_headers = {"Content-Type": "application/json"}
         base_headers.update(headers)
@@ -91,11 +93,13 @@ class UserAPIClient:
         max_time=20,
     )
     def create_pizza_order(self, json_data: dict, method: str = 'POST') -> Response:
-        return self.request(
+        response: Response = self.request(
             url='/pizza-orders',
             json_data=json_data,
             method=method,
         )
+        self.user.pizza_order_id = response.json().get('order', {}).get('id')
+        return response
 
     @backoff.on_predicate(
         backoff.constant,
@@ -115,7 +119,7 @@ class UserAPIClient:
         predicate=lambda x: x.status_code != 200,
         max_time=20,
     )
-    def get_pizza_orders(self, params: dict) -> Response:
+    def get_pizza_orders(self, params: Optional[dict] = None) -> Response:
         return self.request(
             url='/pizza-orders',
             params=params,

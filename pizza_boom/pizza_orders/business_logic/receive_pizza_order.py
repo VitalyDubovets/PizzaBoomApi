@@ -20,15 +20,34 @@ def receive_pizza_order_and_finish_task(event: dict) -> dict:
     pizza_order_id: str = event["pathParameters"]["pizza_order_id"]
     pizza_order: PizzaOrder = PizzaOrder.get(pizza_order_id)
 
+    if not pizza_order.wait_for_receive_pizza_order_token:
+        logger.error(
+            "error_of_state_machine_task_or_order",
+            error_message="Task does not exist or the order is still being prepared",
+            order_id=pizza_order_id,
+            order_status=pizza_order.status,
+        )
+        return make_response(
+            message_body={
+                "message": "Task does not exist or the order is still being prepared",
+            },
+            status_code=404
+        )
+
     try:
         stepfunctions.send_task_success(
             task_token=pizza_order.wait_for_receive_pizza_order_token,
             output={"pizza_order_id": pizza_order_id}
         )
     except TaskTimedOut as e:
-        logger.info(f"TaskTimeOut: {e}")
+        logger.error(f"TaskTimeOut: {e}")
+        return make_response(message_body={"message": "Task timed out"}, status_code=400)
     except (AwsError, ClientError, BotoCoreError) as e:
-        logger.error(f"Failed to send callback to make_trip_requests_task. {e}")
+        logger.error(f"Failed to send callback to cooking_pizza_order_task. {e}")
+        return make_response(
+            message_body={"message": "Failed to send callback to pizza_order_task"},
+            status_code=400
+        )
 
     pizza_order.update(
         actions=[

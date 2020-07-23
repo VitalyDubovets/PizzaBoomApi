@@ -4,7 +4,7 @@ from tests.utils.api_client import UserAPIClient
 
 
 class TestUser:
-    def test_patch_user_valid_data(self, cognito_idp_client, generate_user_api_client):
+    def test_patch_user_valid_data(self, generate_user_api_client) -> None:
         user_api: UserAPIClient = generate_user_api_client()
         json_data: dict = {
             'first_name': user_api.user.first_name,
@@ -18,9 +18,7 @@ class TestUser:
 
         assert response.status_code == 200
 
-    def test_patch_user_invalid_data(
-            self, cognito_idp_client, generate_user_api_client
-    ):
+    def test_patch_user_invalid_data(self, generate_user_api_client):
         user_api: UserAPIClient = generate_user_api_client()
         json_data: dict = {
             'first_name': user_api.user.first_name,
