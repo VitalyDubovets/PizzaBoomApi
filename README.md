@@ -48,7 +48,7 @@ and `Custom Message Trigger`. You read more about lambda triggers on [AWS docs o
 
 #### Detailed description serverless-api.yml
 
-_serverless-api.yml - Stack of api and DynamoDB services_
+_serverless-api.yml - Stack of api and DynamoDB tables_
 
 _The stack contains:_
 
