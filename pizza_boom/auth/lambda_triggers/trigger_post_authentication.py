@@ -1,10 +1,9 @@
-from datetime import datetime
 from typing import Any
 
 import structlog
 
+from pizza_boom.auth.business_logic.update_user import update_user_post_confirmation
 from pizza_boom.core.handlers import LambdaBase, lambda_injector
-from pizza_boom.users.db_models.user_models import UserModel
 
 
 logger = structlog.get_logger()
@@ -17,12 +16,7 @@ class PostAuthenticationLambdaTrigger(LambdaBase):
             trigger_event=event
         )
         if event['triggerSource'] == "PostAuthentication_Authentication":
-            user_attributes: dict = event['request']['userAttributes']
-            user_id: str = user_attributes.get('custom:dynamo_user_id')
-            user: UserModel = UserModel.get(hash_key=user_id)
-            user.update(
-                actions=[UserModel.last_sign_in.set(datetime.now())]
-            )
+            _ = update_user_post_confirmation(event)
         return event
 
 
