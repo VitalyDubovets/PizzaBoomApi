@@ -2,7 +2,9 @@ from typing import Any
 
 import structlog
 
-from pizza_boom.auth.business_logic.update_user import update_user_post_confirmation
+from pizza_boom.auth.business_logic.update_user import (
+    update_user_last_sign_in_post_authentication
+)
 from pizza_boom.core.handlers import LambdaBase, lambda_injector
 
 
@@ -16,7 +18,7 @@ class PostAuthenticationLambdaTrigger(LambdaBase):
             trigger_event=event
         )
         if event['triggerSource'] == "PostAuthentication_Authentication":
-            _ = update_user_post_confirmation(event)
+            _ = update_user_last_sign_in_post_authentication(event)
         return event
 
 
