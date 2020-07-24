@@ -74,7 +74,12 @@ _2. Describing state machines. The project has two state machine: СookingStateM
 for the pizza cooking process, and PrepareFillingStateMachine, which is responsible for the pizza filling process_
 
 _3. Describing two IAM role: base `ExecutionRole` and additional for step functions `StepFunctionsExecutionRole`_
-    
+
+#### Documentation of modules in the form of diagrams
+
+_[Documentation of modules]_
 
 
 [AWS docs of lambda triggers]: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html
+
+[Documentation of modules]: https://miro.com/app/board/o9J_ko6HDaM=/

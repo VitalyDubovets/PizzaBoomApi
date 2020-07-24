@@ -6,14 +6,14 @@ user_errors_dict = {
         "message": "User not found",
         "status": 404
     },
-    "NotFoundRequiredDataError": {
-        "message": "Required data not found. Please, fill your first name, last name and phone",
+    "NotFoundAllRequiredDataError": {
+        "message": "All required data not found. Please, fill your first name, last name and phone",
         "status": 400
     }
 }
 
 
-class NotFoundRequiredDataError(HTTPException):
+class NotFoundAllRequiredDataError(HTTPException):
     status: int = 400
     description: str = "Required data not found"
 
