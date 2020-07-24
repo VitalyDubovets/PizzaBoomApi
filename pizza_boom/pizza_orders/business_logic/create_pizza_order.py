@@ -16,7 +16,7 @@ logger = structlog.get_logger()
 
 def create_pizza_order_and_start_execution(
         event: dict, settings: Settings
-):
+) -> dict:
     try:
         pizza_order = _create_pizza_order(event)
     except ValidationError:
@@ -54,7 +54,7 @@ def _start_pizza_order_state_machine(
     pizza_order_id: str, settings: Settings
 ) -> str:
     pizza_order_state_machine_arn = settings.get_value("PIZZA_ORDER_STATE_MACHINE_ARN")
-    response = stepfunctions.start_execution(
+    response: dict = stepfunctions.start_execution(
         state_machine_arn=pizza_order_state_machine_arn,
         input_=dict(pizza_order_id=pizza_order_id),
         name=f"pizza_order_id-{pizza_order_id}",
