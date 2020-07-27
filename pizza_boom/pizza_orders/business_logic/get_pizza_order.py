@@ -1,13 +1,7 @@
 from typing import List
 
-import flask
-import structlog
-
 from pizza_boom.pizza_orders.db_models.pizza_order_models import PizzaOrder, PizzaStatus
 from pizza_boom.pizza_orders.schemas.pizza_order import PizzaOrderSchema
-
-
-logger = structlog.get_logger()
 
 
 def get_pizza_orders_with_query_params(query_params: dict):
