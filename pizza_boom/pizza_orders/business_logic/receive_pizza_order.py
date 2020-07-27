@@ -18,10 +18,21 @@ logger = structlog.get_logger()
 @backoff.on_exception(backoff.constant, interval=1, exception=DoesNotExist, max_time=10)
 def receive_pizza_order_and_finish_task(event: dict) -> dict:
     pizza_order_id: str = event["pathParameters"]["pizza_order_id"]
-    pizza_order: PizzaOrder = PizzaOrder.get(pizza_order_id)
+
+    try:
+        pizza_order: PizzaOrder = PizzaOrder.get(pizza_order_id)
+    except PizzaOrder.DoesNotExist:
+        logger.debug(
+            "order_for_receiving_does_not_exist",
+            pizza_order_id=pizza_order_id
+        )
+        return make_response(
+            message_body={"message": "Order does not exist"},
+            status_code=404
+        )
 
     if not pizza_order.wait_for_receive_pizza_order_token:
-        logger.error(
+        logger.debug(
             "error_of_state_machine_task_or_order",
             error_message="Task does not exist or the order is still being prepared",
             order_id=pizza_order_id,
