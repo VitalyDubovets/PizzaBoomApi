@@ -22,6 +22,5 @@ def patch_user(user_id: str, json_data: dict) -> dict:
     user.update(actions=[
         getattr(UserModel, attr).set(value) for attr, value in user_patch_data.items()
     ])
-    user.refresh()
 
     return schema.dump(user)

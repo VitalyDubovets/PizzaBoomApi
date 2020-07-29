@@ -6,7 +6,6 @@ from botocore.exceptions import BotoCoreError, ClientError
 from pynamodb.exceptions import DoesNotExist
 
 from pizza_boom.core.aws import stepfunctions
-from pizza_boom.core.aws.custom_errors import AwsError, TaskTimedOut
 from pizza_boom.core.utils import make_response
 from pizza_boom.pizza_orders.db_models.pizza_order_models import PizzaOrder, PizzaStatus
 from pizza_boom.pizza_orders.schemas.pizza_order import PizzaOrderSchema
@@ -50,10 +49,7 @@ def receive_pizza_order_and_finish_task(event: dict) -> dict:
             task_token=pizza_order.wait_for_receive_pizza_order_token,
             output={"pizza_order_id": pizza_order_id}
         )
-    except TaskTimedOut as e:
-        logger.error(f"TaskTimeOut: {e}")
-        return make_response(message_body={"message": "Task timed out"}, status_code=400)
-    except (AwsError, ClientError, BotoCoreError) as e:
+    except (ClientError, BotoCoreError) as e:
         logger.error(f"Failed to send callback to cooking_pizza_order_task. {e}")
         return make_response(
             message_body={"message": "Failed to send callback to pizza_order_task"},
@@ -67,7 +63,6 @@ def receive_pizza_order_and_finish_task(event: dict) -> dict:
             PizzaOrder.wait_for_receive_pizza_order_token.remove()
         ]
     )
-    pizza_order.refresh()
     message_body = {
         "message": "Order is delivered successfully",
         "order": PizzaOrderSchema().dump(pizza_order)
