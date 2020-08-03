@@ -1,8 +1,13 @@
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
+import boto3
+
 from pydantic.env_settings import BaseSettings, deep_update, env_file_sentinel
 
+
+ssm_client = boto3.client('ssm')
 
 yaml_file_sentinel = str(object())
 
@@ -26,9 +31,14 @@ class CustomSettings(BaseSettings):
             )
         )
 
+    @property
+    def _ssm_client(self):
+        return ssm_client
+
     def _build_values(
         self,
         init_kwargs: Dict[str, Any],
+        _ssm_client: Any = None,
         _env_file: Union[Path, str, None] = None,
         _env_file_encoding: Optional[str] = None,
         _yaml_file: Union[Path, str, None] = None,
@@ -38,7 +48,13 @@ class CustomSettings(BaseSettings):
             self._build_environ(_env_file, _env_file_encoding),
             self._build_yaml_settings(_yaml_file, _yaml_file_encoding)
         )
-        return deep_update(built_dict_from_yaml_and_environ, init_kwargs)
+        built_with_default_ssm_configs: dict = deep_update(
+            built_dict_from_yaml_and_environ, self._read_ssm_config("default")
+        )
+        built_with_stage_ssm_configs: dict = deep_update(
+            built_with_default_ssm_configs, self._read_ssm_config(os.environ["STAGE"])
+        )
+        return deep_update(built_with_stage_ssm_configs, init_kwargs)
 
     def _build_yaml_settings(
             self, _yaml_file: Union[Path, str, None] = None, _yaml_file_encoding: Optional[str] = None,
@@ -64,6 +80,21 @@ class CustomSettings(BaseSettings):
                     ),
                 }
         return yaml_vars
+
+    def _read_ssm_config(self, stage: str) -> dict:
+        result = self._ssm_client.get_parameters_by_path(
+            Path=f"/{stage}", Recursive=True, WithDecryption=True
+        )
+
+        config = {}
+        for param in result["Parameters"]:
+            option = config
+            path = param["Name"].split("/")
+            for p in path[2:-1]:
+                option = option.setdefault(p, {})
+            option[path[-1]] = param["Value"]
+
+        return config
 
     class Config:
         yaml_file = None

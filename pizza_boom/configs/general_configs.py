@@ -4,6 +4,7 @@ import sys
 import rapidjson
 import structlog
 from injector import Module, provider, singleton
+from pydantic import Extra
 from structlog.contextvars import merge_contextvars
 
 from pizza_boom.core.settings.custom_settings import CustomSettings
@@ -21,6 +22,7 @@ class Settings(CustomSettings):
     class Config:
         env_file = '.env'
         yaml_file = 'settings_default.yml'
+        extra = Extra.ignore
         case_sensitive = True
 
 
