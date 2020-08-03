@@ -53,7 +53,7 @@ def _create_pizza_order(event: dict) -> PizzaOrder:
 def _start_pizza_order_state_machine(
     pizza_order_id: str, settings: Settings
 ) -> str:
-    pizza_order_state_machine_arn = settings.get_value("PIZZA_ORDER_STATE_MACHINE_ARN")
+    pizza_order_state_machine_arn = settings.PIZZA_ORDER_STATE_MACHINE_ARN
     response: dict = stepfunctions.start_execution(
         state_machine_arn=pizza_order_state_machine_arn,
         input_=dict(pizza_order_id=pizza_order_id),

@@ -1,35 +1,27 @@
 import logging.config
-import os
 import sys
-from typing import Any
 
-import jmespath
 import rapidjson
 import structlog
-import yaml
 from injector import Module, provider, singleton
 from structlog.contextvars import merge_contextvars
 
-from pizza_boom.core.utils import merge
+from pizza_boom.core.settings.custom_settings import CustomSettings
 
 
-class Settings:
-    def __init__(self):
-        self._values: dict = {}
-        config_files: list = ["settings_default.yml", "settings_environment.yml"]
+class Settings(CustomSettings):
+    AWS_PROFILE: str
+    AWS_REGION: str
+    API_VERSION: str
+    DOMAIN: str
+    PREFIX_TABLE: str
+    PIZZA_ORDER_STATE_MACHINE_ARN: str = None
+    STAGE: str = None
 
-        for config_file in config_files:
-            if os.path.exists(config_file):
-                with open(config_file) as file:
-                    merge(yaml.load(file, Loader=yaml.FullLoader), self._values)
-
-        merge(dict(os.environ), self._values)
-
-    def get_value(self, path: str, required: bool = True) -> Any:
-        target_setting = jmespath.search(path, self._values)
-        if required and target_setting is None:
-            raise ValueError(f"Required setting {path} was not specified")
-        return target_setting
+    class Config:
+        env_file = '.env'
+        yaml_file = 'settings_default.yml'
+        case_sensitive = True
 
 
 class SettingsModule(Module):
