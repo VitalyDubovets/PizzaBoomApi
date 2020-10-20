@@ -50,6 +50,38 @@ package:
     - .serverless/**
 
 custom:
+  alerts:
+    stages:
+      - dev
+    topics:
+      alarm:
+        topic: ${self:service}-${opt:stage}-alerts-alarm
+        notifications:
+          - protocol: email
+            endpoint: dubovetsvitaliy@gmail.com
+    definitions:
+      tablesReadCapacityUnitsAlarm:
+        description: 'Monitor ConsumedReadCapacityUnits of tables'
+        namespace: 'AWS/DynamoDB'
+        metric: ConsumedReadCapacityUnits
+        threshold: 1
+        statistic: Average
+        period: 300
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanOrEqualToThreshold
+      tablesWriteCapacityUnitsAlarm:
+        description: 'Monitor ConsumedWriteCapacityUnits of tables'
+        namespace: 'AWS/DynamoDB'
+        metric: ConsumedWriteCapacityUnits
+        threshold: 1
+        statistic: Average
+        period: 300
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanOrEqualToThreshold
+    alarms:
+      - tablesReadCapacityUnitsAlarm
+      - tablesWriteCapacityUnitsAlarm
+
   config: ${file(settings_default.yml)}
   apiStackName: ${self:service}-${self:provider.stage}
   orderSmStackName: pizza-boom-sm-${self:provider.stage}
@@ -67,6 +99,7 @@ custom:
     pythonBin: python3
 
 plugins:
+  - serverless-plugin-aws-alerts
   - serverless-plugin-warmup
   - serverless-pseudo-parameters
   - serverless-python-requirements
