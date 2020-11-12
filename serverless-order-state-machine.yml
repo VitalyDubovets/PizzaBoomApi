@@ -32,23 +32,36 @@ plugins:
   - serverless-pseudo-parameters
   - serverless-python-requirements
   - serverless-step-functions
+  - serverless-plugin-canary-deployments
 
 functions:
   failReceivePizzaOrder:
     name: ${self:service}-${self:provider.stage}-fail-receive-pizza-order
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/fail_receive_pizza_order.handler
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: failReceivePizzaOrderAlias
 
   pizzaOrderFailed:
     name: ${self:service}-${self:provider.stage}-pizza-order-fail
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/order_failed.handler
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: pizzaOrderFailAlias
 
   evaluateQuality:
     name: ${self:service}-${self:provider.stage}-evaluate-quality-pizza
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/evaluate_quality.handler
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: evaluateQualityPizzaAlias
 
   waitForReceivePizzaOrder:
     name: ${self:service}-${self:provider.stage}-wait-for-receive-pizza-order
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/wait_for_receive_pizza_order.handler
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: waitForReceivePizzaOrderAlias
 
 stepFunctions:
   stateMachines:

@@ -64,7 +64,7 @@ def receive_pizza_order_and_finish_task(event: dict) -> dict:
         ]
     )
     message_body = {
-        "message": "Order is delivered successfully",
+        "message": "Order is delivered successfully!",
         "order": PizzaOrderSchema().dump(pizza_order)
     }
     return make_response(message_body=message_body, status_code=200)

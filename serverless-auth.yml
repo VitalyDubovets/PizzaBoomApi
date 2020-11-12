@@ -27,6 +27,7 @@ plugins:
   - serverless-plugin-warmup
   - serverless-pseudo-parameters
   - serverless-python-requirements
+  - serverless-plugin-canary-deployments
 
 functions:
   cognitoTriggerCustomMessage:
@@ -36,6 +37,9 @@ functions:
       - cognitoUserPool:
           pool: PizzaBoomUsers
           trigger: CustomMessage
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: customMessageTriggerAlias
 
   cognitoTriggerPostAuthentication:
     name: ${self:service}-${self:provider.stage}-post-authentication-trigger
@@ -44,6 +48,9 @@ functions:
       - cognitoUserPool:
           pool: PizzaBoomUsers
           trigger: PostAuthentication
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: postAuthenticationTriggerAlias
 
   cognitoTriggerPostConfirmation:
     name: ${self:service}-${self:provider.stage}-post-confirmation-trigger
@@ -52,6 +59,9 @@ functions:
       - cognitoUserPool:
           pool: PizzaBoomUsers
           trigger: PostConfirmation
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: postConfirmationTriggerAlias
 
   cognitoTriggerPreSignUp:
     name: ${self:service}-${self:provider.stage}-pre-sign-up-trigger
@@ -60,6 +70,9 @@ functions:
       - cognitoUserPool:
           pool: PizzaBoomUsers
           trigger: PreSignUp
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: preSignUpTriggerAlias
 
 resources:
   Resources:

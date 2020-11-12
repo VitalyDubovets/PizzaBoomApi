@@ -11,9 +11,10 @@
   "dependencies": {
     "serverless": "1.74.1",
     "serverless-plugin-aws-alerts": "^1.6.1",
+    "serverless-plugin-canary-deployments": "^0.4.8",
     "serverless-plugin-warmup": "4.9.0",
     "serverless-pseudo-parameters": "^2.5.0",
-    "serverless-python-requirements": "5.1.0",
+    "serverless-python-requirements": "^5.1.0",
     "serverless-step-functions": "^2.27.1",
     "serverless-wsgi": "1.7.5"
   }

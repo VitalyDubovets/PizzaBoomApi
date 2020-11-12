@@ -5,6 +5,7 @@ role:
 dependsOn:
   - StepFunctionsExecutionRole
   - ExecutionRole
+useExactVersion: true
 definition:
   Comment: "Cooking State Machine"
   StartAt: PreparationIngredients

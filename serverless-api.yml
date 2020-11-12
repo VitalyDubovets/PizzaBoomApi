@@ -105,6 +105,7 @@ plugins:
   - serverless-python-requirements
   - serverless-step-functions
   - serverless-wsgi
+  - serverless-plugin-canary-deployments
 
 functions:
   apiFlask:
@@ -119,6 +120,9 @@ functions:
       - httpApi:
           method: GET
           path: /api/v1/pizza-orders
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: apiFlaskAlias
 
   createOrder:
     name: ${self:service}-${self:provider.stage}-api-create-order
@@ -129,6 +133,9 @@ functions:
           path: /api/v1/pizza-orders
           authorizer:
             name: userJwtAuthorizer
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: apiCreateOrderAlias
 
   receiveOrder:
     name: ${self:service}-${self:provider.stage}-api-receive-order
@@ -139,6 +146,9 @@ functions:
           path: /api/v1/pizza-orders/{pizza_order_id}/receive
           authorizer:
             name: userJwtAuthorizer
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: apiReceiveOrderAlias
 
 resources:
   Resources:
