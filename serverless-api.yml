@@ -105,7 +105,7 @@ plugins:
   - serverless-python-requirements
   - serverless-step-functions
   - serverless-wsgi
-  - serverless-plugin-canary-deployments
+  - serverless-blue-green-deployments
 
 functions:
   apiFlask:
@@ -122,7 +122,7 @@ functions:
           path: /api/v1/pizza-orders
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: apiFlaskAlias
+      alias: ${self:provider.stage}ApiFlaskAlias
 
   createOrder:
     name: ${self:service}-${self:provider.stage}-api-create-order
@@ -135,7 +135,7 @@ functions:
             name: userJwtAuthorizer
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: apiCreateOrderAlias
+      alias: ${self:provider.stage}ApiCreateOrderAlias
 
   receiveOrder:
     name: ${self:service}-${self:provider.stage}-api-receive-order
@@ -148,7 +148,7 @@ functions:
             name: userJwtAuthorizer
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: apiReceiveOrderAlias
+      alias: ${self:provider.stage}ApiReceiveOrderAlias
 
 resources:
   Resources:

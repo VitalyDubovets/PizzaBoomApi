@@ -32,7 +32,7 @@ plugins:
   - serverless-pseudo-parameters
   - serverless-python-requirements
   - serverless-step-functions
-  - serverless-plugin-canary-deployments
+  - serverless-blue-green-deployments
 
 functions:
   failReceivePizzaOrder:
@@ -40,28 +40,28 @@ functions:
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/fail_receive_pizza_order.handler
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: failReceivePizzaOrderAlias
+      alias: ${self:provider.stage}FailReceivePizzaOrderAlias
 
   pizzaOrderFailed:
     name: ${self:service}-${self:provider.stage}-pizza-order-fail
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/order_failed.handler
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: pizzaOrderFailAlias
+      alias: ${self:provider.stage}PizzaOrderFailAlias
 
   evaluateQuality:
     name: ${self:service}-${self:provider.stage}-evaluate-quality-pizza
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/evaluate_quality.handler
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: evaluateQualityPizzaAlias
+      alias: ${self:provider.stage}EvaluateQualityPizzaAlias
 
   waitForReceivePizzaOrder:
     name: ${self:service}-${self:provider.stage}-wait-for-receive-pizza-order
     handler: pizza_boom/pizza_orders/lambda_functions/lambda_step_functions/wait_for_receive_pizza_order.handler
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: waitForReceivePizzaOrderAlias
+      alias: ${self:provider.stage}WaitForReceivePizzaOrderAlias
 
 stepFunctions:
   stateMachines:

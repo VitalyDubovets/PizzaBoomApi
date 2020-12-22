@@ -27,7 +27,7 @@ plugins:
   - serverless-plugin-warmup
   - serverless-pseudo-parameters
   - serverless-python-requirements
-  - serverless-plugin-canary-deployments
+  - serverless-blue-green-deployments
 
 functions:
   cognitoTriggerCustomMessage:
@@ -39,7 +39,7 @@ functions:
           trigger: CustomMessage
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: customMessageTriggerAlias
+      alias: ${self:provider.stage}CustomMessageTriggerAlias
 
   cognitoTriggerPostAuthentication:
     name: ${self:service}-${self:provider.stage}-post-authentication-trigger
@@ -50,7 +50,7 @@ functions:
           trigger: PostAuthentication
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: postAuthenticationTriggerAlias
+      alias: ${self:provider.stage}PostAuthenticationTriggerAlias
 
   cognitoTriggerPostConfirmation:
     name: ${self:service}-${self:provider.stage}-post-confirmation-trigger
@@ -61,7 +61,7 @@ functions:
           trigger: PostConfirmation
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: postConfirmationTriggerAlias
+      alias: ${self:provider.stage}PostConfirmationTriggerAlias
 
   cognitoTriggerPreSignUp:
     name: ${self:service}-${self:provider.stage}-pre-sign-up-trigger
@@ -72,7 +72,7 @@ functions:
           trigger: PreSignUp
     deploymentSettings:
       type: Linear10PercentEvery1Minute
-      alias: preSignUpTriggerAlias
+      alias: ${self:provider.stage}PreSignUpTriggerAlias
 
 resources:
   Resources:
