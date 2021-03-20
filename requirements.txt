@@ -12,7 +12,7 @@ Flask-RESTful==0.3.8
 idna==2.10
 injector==0.18.3
 itsdangerous==1.1.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 jmespath==0.10.0
 MarkupSafe==1.1.1
 marshmallow==3.7.1
