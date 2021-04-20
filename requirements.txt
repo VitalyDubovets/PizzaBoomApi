@@ -19,7 +19,7 @@ marshmallow==3.7.1
 more-itertools==8.4.0
 packaging==20.4
 pluggy==0.13.1
-py==1.9.0
+py==1.10.0
 pydantic==1.6.1
 pynamodb==4.3.2
 pyparsing==2.4.7
